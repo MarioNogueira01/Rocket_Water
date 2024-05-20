@@ -66,7 +66,7 @@ class Base:
             if self._input.quit:
                 self._running = False
             # seconds since iteration of run loop
-            self._delta_time = self._clock.get_time() / 1000
+            self._delta_time = self._clock.get_time() / 150
             # Increment time application has been running
             self._time += self._delta_time
             # Update #

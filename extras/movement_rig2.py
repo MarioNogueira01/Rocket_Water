@@ -2,7 +2,6 @@ import math
 
 from core_ext.object3d import Object3D
 
-
 class MovementRig(Object3D):
     """
     Add moving forwards and backwards, left and right, 
@@ -28,12 +27,12 @@ class MovementRig(Object3D):
         self.KEY_MOVE_LEFT = "a"
         self.KEY_MOVE_RIGHT = "d"
 
-        self.KEY_MOVE_FORWARDS2 = "i"
-        self.KEY_MOVE_BACKWARDS2 = "k"
-        self.KEY_MOVE_LEFT2 = "j"
-        self.KEY_MOVE_RIGHT2 = "l"
-        self.KEY_TURN_LEFT2 = "u"
-        self.KEY_TURN_RIGHT2 = "o"
+        self.KEY_MOVE_FORWARDS2 = "w"
+        self.KEY_MOVE_BACKWARDS2 = "s"
+        self.KEY_MOVE_LEFT2 = "a"
+        self.KEY_MOVE_RIGHT2 = "d"
+        self.KEY_TURN_LEFT2 = "q"
+        self.KEY_TURN_RIGHT2 = "e"
 
         self.KEY_MOVE_UP = "r"
         self.KEY_MOVE_DOWN = "f"
@@ -50,41 +49,55 @@ class MovementRig(Object3D):
     def remove(self, child):
         self._look_attachment.remove(child)
 
-    def update(self, input_object, delta_time, isObject):
+    def updateObject(self, input_object, delta_time):
         move_amount = self._units_per_second * delta_time
         rotate_amount = self._degrees_per_second * (math.pi / 180) * delta_time
 
-        if isObject:
-            if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS2):
-                self.translate(0, 0, -move_amount)
-            if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS2):
-                self.translate(0, 0, move_amount)
-            if input_object.is_key_pressed(self.KEY_MOVE_LEFT2):
-                self.translate(-move_amount, 0, 0)
-            if input_object.is_key_pressed(self.KEY_MOVE_RIGHT2):
-                self.translate(move_amount, 0, 0)
-            if input_object.is_key_pressed(self.KEY_TURN_LEFT2):
-                self.rotate_y(rotate_amount)
-            if input_object.is_key_pressed(self.KEY_TURN_RIGHT2):
-                self.rotate_y(-rotate_amount)
-        else:
-            if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):
-                self.translate(0, 0, -move_amount)
-            if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):
-                self.translate(0, 0, move_amount)
-            if input_object.is_key_pressed(self.KEY_MOVE_LEFT):
-                self.translate(-move_amount, 0, 0)
-            if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):
-                self.translate(move_amount, 0, 0)
-            if input_object.is_key_pressed(self.KEY_MOVE_UP):
-                self.translate(0, move_amount, 0)
-            if input_object.is_key_pressed(self.KEY_MOVE_DOWN):
-                self.translate(0, -move_amount, 0)
-            if input_object.is_key_pressed(self.KEY_TURN_RIGHT):
-                self.rotate_y(-rotate_amount)
-            if input_object.is_key_pressed(self.KEY_TURN_LEFT):
-                self.rotate_y(rotate_amount)
-            if input_object.is_key_pressed(self.KEY_LOOK_UP):
-                self._look_attachment.rotate_x(rotate_amount)
-            if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
-                self._look_attachment.rotate_x(-rotate_amount)
+        if input_object.is_key_pressed(self.KEY_MOVE_RIGHT2):
+            self.translate(0, 0, -move_amount)
+        if input_object.is_key_pressed(self.KEY_MOVE_LEFT2):
+            self.translate(0, 0, move_amount)
+        if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS2):
+            self.translate(-move_amount, 0, 0)
+        if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS2):
+            self.translate(move_amount, 0, 0)
+        if input_object.is_key_pressed(self.KEY_TURN_LEFT2):
+            self.rotate_y(rotate_amount)
+        if input_object.is_key_pressed(self.KEY_TURN_RIGHT2):
+            self.rotate_y(-rotate_amount)
+            
+
+    def updateCamera(self, input_object, delta_time,x,y,z):
+        move_amount = self._units_per_second * delta_time
+        rotate_amount = self._degrees_per_second * (math.pi / 180) * delta_time
+
+        if input_object.is_key_pressed(self.KEY_MOVE_FORWARDS):
+            self.translate(0, 0, -move_amount)
+        if input_object.is_key_pressed(self.KEY_MOVE_BACKWARDS):
+            self.translate(0, 0, move_amount)
+        if input_object.is_key_pressed(self.KEY_MOVE_LEFT):
+            self.translate(-move_amount, 0, 0)
+        if input_object.is_key_pressed(self.KEY_MOVE_RIGHT):
+            self.translate(move_amount, 0, 0)
+        if input_object.is_key_pressed(self.KEY_MOVE_UP):
+            self.translate(0, move_amount, 0)
+        if input_object.is_key_pressed(self.KEY_MOVE_DOWN):
+            self.translate(0, -move_amount, 0)
+        if input_object.is_key_pressed(self.KEY_TURN_RIGHT):
+            self.rotateCamera(-rotate_amount,x,y,z)
+        if input_object.is_key_pressed(self.KEY_TURN_LEFT):
+            self.rotateCamera(rotate_amount,x,y,z)
+        if input_object.is_key_pressed(self.KEY_LOOK_UP):
+            self._look_attachment.rotate_x(rotate_amount)
+        if input_object.is_key_pressed(self.KEY_LOOK_DOWN):
+            self._look_attachment.rotate_x(-rotate_amount)
+
+    def rotateCamera(self,rotate_amount,x,y,z):
+        
+        self.rotate_y(rotate_amount)
+        self.translate(x,y,z)
+        self.translate(-x,-y,-z)
+
+
+    def get_position(self):
+        return self.global_position

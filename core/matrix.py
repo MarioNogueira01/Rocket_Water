@@ -1,5 +1,6 @@
 import numpy
 
+import numpy as np
 from numpy import subtract, divide, cross
 from numpy.linalg import norm
 from math import sin, cos, tan, pi
@@ -49,7 +50,7 @@ class Matrix:
              [-s, 0,  c,  0],
              [0,  0,  0,  1]]
         ).astype(float)
-
+    
     @staticmethod
     def make_rotation_z(angle):
         c = cos(angle)
