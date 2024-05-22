@@ -1,5 +1,4 @@
 import math
-import os
 
 from core_ext.mesh import Mesh
 from core_ext.texture import Texture
@@ -32,15 +31,15 @@ class ObjectCreator:
         self.example.scene.add(grass)
 
         # Load first object from OBJ file
-        geometryBoal = ObjGeo('models/bola_praia.obj')
-        textureBoal = Texture(file_name="images/texture.png")
-        materialBoal = TextureMaterial(texture=textureBoal)
-        self.meshBoal = Mesh(geometryBoal, materialBoal)
-        self.boal = MovementRig()
-        self.boal.add(self.meshBoal)
-        self.boal.scale(0.3)
-        self.boal.set_position([0.5, 0.5, -4])
-        self.example.scene.add(self.boal)
+        geometryball = ObjGeo('models/bola_praia.obj')
+        textureball = Texture(file_name="images/texture.png")
+        materialball = TextureMaterial(texture=textureball)
+        self.meshball = Mesh(geometryball, materialball)
+        self.ball = MovementRig()
+        self.ball.add(self.meshball)
+        self.ball.scale(0.3)
+        self.ball.set_position([0.5, 0.5, -4])
+        self.example.scene.add(self.ball)
 
         # Load jetski object from OBJ file
         jetSki_geometry = ObjGeo('models/jetSki.obj')
