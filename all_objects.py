@@ -1,14 +1,13 @@
 import math
 import os
 
-from Objetos.jetskiCentralPointsCalculator import JetskiCentralPointsCalculator
 from core_ext.mesh import Mesh
 from core_ext.texture import Texture
 from geometry.objGeo import ObjGeo
 from geometry.rectangle import RectangleGeometry
 from geometry.sphere import SphereGeometry
 from material.texture import TextureMaterial
-from extras.movement_rig2 import MovementRig
+from extras.movement_rig import MovementRig
 
 class ObjectCreator:
     def __init__(self, example):
@@ -53,12 +52,4 @@ class ObjectCreator:
         self.jetSki.rotate_y((math.pi) * 1.5)
         self.jetSki.scale(1)  # Adjust scale as needed
         self.jetSki.set_position([0.5, 0.3, 5])  # Adjust position as needed
-        self.example.scene.add(self.jetSki)
-
-        # Criar instância de JetskiCentralPointsCalculator
-        self.jetski_calculator = JetskiCentralPointsCalculator(self)
-
-    def JetskiCentralPointCalculator(self):
-        centro_x, centro_y, centro_z = self.jetski_calculator.calcular_ponto_central_jetski()
-        return centro_x, centro_y, centro_z
-    
+        self.example.scene.add(self.jetSki)   
