@@ -12,6 +12,10 @@ class ObjectCreator:
     def __init__(self, example):
         self.example = example
         self.create_objects()
+        self.ball_velocity = [0, 0, 0]  # Initialize ball velocity
+        self.gravity = -0.5  # Gravity constant, negative to indicate downward force
+        self.attrition = 0.995  # Attrition factor, slightly less than 1
+
 
     def create_objects(self):
         # Add skysphere
@@ -21,14 +25,14 @@ class ObjectCreator:
         self.example.scene.add(sky)
 
         # Add grass floor
-        grass_geometry = RectangleGeometry(width=1000, height=1000)
-        grass_material = TextureMaterial(
+        sand_geometry = RectangleGeometry(width=1000, height=1000)
+        sand_material = TextureMaterial(
             texture=Texture(file_name="images/sand2.jpg"),
             property_dict={"repeatUV": [50, 50]}
         )
-        grass = Mesh(grass_geometry, grass_material)
-        grass.rotate_x(-math.pi / 2)
-        self.example.scene.add(grass)
+        sand = Mesh(sand_geometry, sand_material)
+        sand.rotate_x(-math.pi / 2)
+        self.example.scene.add(sand)
 
         # Load first object from OBJ file
         geometryball = ObjGeo('models/bola_praia.obj')
@@ -49,6 +53,5 @@ class ObjectCreator:
         self.jetSki = MovementRig()
         self.jetSki.add(self.jetSki_mesh)
         self.jetSki.rotate_y((math.pi) * 1.5)
-        self.jetSki.scale(1)  # Adjust scale as needed
         self.jetSki.set_position([0.5, 0.3, 5])  # Adjust position as needed
         self.example.scene.add(self.jetSki)   

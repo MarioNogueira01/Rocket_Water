@@ -20,27 +20,6 @@ class MovementRig(Object3D):
         self._units_per_second = units_per_second
         self._degrees_per_second = degrees_per_second
 
-        # Customizable key mappings.
-        # Defaults: W, A, S, D, R, F (move), Q, E (turn), T, G (look)
-        self.KEY_MOVE_FORWARDS = "w"
-        self.KEY_MOVE_BACKWARDS = "s"
-        self.KEY_MOVE_LEFT = "a"
-        self.KEY_MOVE_RIGHT = "d"
-
-        self.KEY_MOVE_FORWARDS2 = "w"
-        self.KEY_MOVE_BACKWARDS2 = "s"
-        self.KEY_MOVE_LEFT2 = "a"
-        self.KEY_MOVE_RIGHT2 = "d"
-        self.KEY_TURN_LEFT2 = "q"
-        self.KEY_TURN_RIGHT2 = "e"
-
-        self.KEY_MOVE_UP = "r"
-        self.KEY_MOVE_DOWN = "f"
-        self.KEY_TURN_LEFT = "q"
-        self.KEY_TURN_RIGHT = "e"
-        self.KEY_LOOK_UP = "t"
-        self.KEY_LOOK_DOWN = "g"
-
     # Adding and removing objects applies to look attachment.
     # Override functions from the Object3D class.
     def add(self, child):
@@ -49,43 +28,40 @@ class MovementRig(Object3D):
     def remove(self, child):
         self._look_attachment.remove(child)
 
-    def updateObject(self, input_object, delta_time):
+    def updateObject(self, input_object, delta_time, isJetSki, apply_gravity=True):
         move_amount = self._units_per_second * delta_time
         rotate_amount = self._degrees_per_second * (math.pi / 180) * delta_time
 
-        if input_object.is_key_pressed("w"):
-            self.translate(-move_amount, 0, 0)
-        if input_object.is_key_pressed("s"):
-            self.translate(move_amount, 0, 0)
-        if input_object.is_key_pressed("a"):
-            self.rotate_y(rotate_amount)
-        if input_object.is_key_pressed("d"):
-            self.rotate_y(-rotate_amount)
-            
+        if isJetSki:
+            if input_object.is_key_pressed("w"):
+                self.translate(-move_amount, 0, 0)
+            if input_object.is_key_pressed("s"):
+                self.translate(move_amount, 0, 0)
+            if input_object.is_key_pressed("a"):
+                self.rotate_y(rotate_amount)
+            if input_object.is_key_pressed("d"):
+                self.rotate_y(-rotate_amount)   
 
-    def rotateCamera(self,rotate_amount,x,y,z):
-        
-        self.rotate_y(rotate_amount)
-        self.translate(x,y,z)
-        self.translate(-x,-y,-z)
+        if hasattr(self, 'velocity'):
+            self.translate(self.velocity[0] * delta_time, self.velocity[1] * delta_time, self.velocity[2] * delta_time)
+            # if apply_gravity:
+                # self.velocity[1] += self.parent.gravity * delta_time  # Apply gravity to the y-component
+
+       
 
 
     def get_position(self):
         return self.global_position
 
     def follow_target(self, target, offset):
-        # Get the global position and orientation of the target (jetski)
         target_position = target.global_position
         target_matrix = target.global_matrix
 
-        # Calculate the offset position in the local space of the target
         offset_position = [
             target_matrix[0, 0] * offset[0] + target_matrix[0, 1] * offset[1] + target_matrix[0, 2] * offset[2],
             target_matrix[1, 0] * offset[0] + target_matrix[1, 1] * offset[1] + target_matrix[1, 2] * offset[2],
             target_matrix[2, 0] * offset[0] + target_matrix[2, 1] * offset[1] + target_matrix[2, 2] * offset[2]
         ]
-
-        # Set the camera position based on the offset from the target
         new_camera_position = [
             target_position[0] + offset_position[0],
             target_position[1] + offset_position[1],
@@ -98,23 +74,18 @@ class MovementRig(Object3D):
 
 
     def follow_target_look_at(self, target, look_at_target, y_elevate, distance):
-        # Get the global position of the target (jetski) and the look_at_target (ball)
         target_position = target.global_position
         look_at_position = look_at_target.global_position
 
-
-        # Calculate the direction from the jetski to the ball
         direction = np.array(look_at_position) - np.array(target_position)
-        direction = direction / np.linalg.norm(direction)  # Normalize the direction
+        direction = direction / np.linalg.norm(direction)
 
-        # Calculate the new camera position based on the offset distance behind the jetski along the direction
         new_camera_position = np.array(target_position) - direction * distance
 
-        # Add the elevation offset
-        new_camera_position[1] += y_elevate
+        if(look_at_position[1] > target_position[1]+1):
+            new_camera_position[1] += y_elevate + 2 # Small Correction
+        else:
+            new_camera_position[1] += y_elevate # Small Correction
 
-        # Set the camera position
         self.set_position(new_camera_position.tolist())
-
-        # Orient the camera to look at the ball
         self.look_at(look_at_position)
