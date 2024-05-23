@@ -1,3 +1,4 @@
+import time
 import math
 from constants import *
 from core.base import Base
@@ -19,6 +20,16 @@ class Main(Base):
         self.objects = ObjectCreator(self)
         self.camera_follow_mode = True
 
+        self.last_time = time.time()
+        self.frame_count = 0
+        self.fps = 0
+
+########################################################################################
+########################################################################################
+# CAMERA SYSTEM
+########################################################################################
+########################################################################################
+
     def camera_updates(self):
         if self.input.is_key_down("space"):
             self.camera_follow_mode = not self.camera_follow_mode
@@ -26,17 +37,22 @@ class Main(Base):
         if self.camera_follow_mode:
             self.camera_rig.follow_target(self.objects.jetSki, offset=[CAMERA_OFFSET_DISTANCE, CAMERA_OFFSET_Y, 0])
         else:
-            self.camera_rig.follow_target_look_at(self.objects.jetSki, self.objects.ball, CAMERA_OFFSET_Y, CAMERA_OFFSET_DISTANCE)
+            self.camera_rig.follow_target_look_at(self.objects.jetSki, self.objects.ball, CAMERA_FOLLOW_OFFSET_Y, CAMERA_OFFSET_DISTANCE)
+
+########################################################################################
+########################################################################################
+# BALL COLLISION SYSTEM
+########################################################################################
+########################################################################################
 
     def check_collision(self):
         jetski_pos = self.objects.jetSki.global_position
         ball_pos = self.objects.ball.global_position
 
         distance = math.sqrt((jetski_pos[0] - ball_pos[0]) ** 2 + (jetski_pos[1] - ball_pos[1]) ** 2 + (jetski_pos[2] - ball_pos[2]) ** 2)
-        collision_distance = 0.5  # Assume both have radius 0.25
+        collision_distance = HITBOX_BUFFER 
 
         if distance < collision_distance:
-            # Collision response: move the ball in the opposite direction
             direction = [
                 ball_pos[0] - jetski_pos[0],
                 ball_pos[1] - jetski_pos[1],
@@ -46,28 +62,59 @@ class Main(Base):
             if magnitude != 0:
                 direction = [d / magnitude for d in direction]
 
-            # Update ball velocity
-            self.objects.ball_velocity = [d * 7 for d in direction]  # Adjust speed as needed
+            self.objects.ball_velocity = [d * BALL_SPEED for d in direction] 
 
-    def update(self):
-        self.objects.jetSki.updateObject(self.input, self.delta_time, True)
+    def ball_collisions(self):
         self.check_collision()
 
-        # Apply gravity to the ball
         if self.objects.ball.get_position()[1] > 0.5:
-            self.objects.ball_velocity[1] += self.objects.gravity * self.delta_time  # Gravity effect on the y-axis
+            self.objects.ball_velocity[1] += BALL_GRAVITY * self.delta_time
         elif self.objects.ball_velocity[1] < 0 and self.objects.ball.get_position()[1] < 1:
-            self.objects.ball_velocity[1] = 0
+            self.objects.ball_velocity[1] =  -self.objects.ball_velocity[1] * BALL_BOUNCE
 
-        # Apply attrition to the ball's velocity
-        self.objects.ball_velocity = [v * self.objects.attrition for v in self.objects.ball_velocity]
-
-        # Update ball position based on velocity
+        self.objects.ball_velocity = [v * BALL_ATTRITION for v in self.objects.ball_velocity]
         self.objects.ball.velocity = self.objects.ball_velocity
-        self.objects.ball.updateObject(self.input, self.delta_time, False)
+        self.objects.ball.updateBall(self.delta_time)
 
+########################################################################################
+########################################################################################
+# SHOW FPS
+########################################################################################
+########################################################################################
+
+    def showFPS(self):
+        current_time = time.time()
+        elapsed_time = current_time - self.last_time
+        self.frame_count += 1
+        
+        if elapsed_time >= 1.0:
+            self.fps = self.frame_count / elapsed_time
+            print(f"FPS: {self.fps:.2f}")
+            self.frame_count = 0
+            self.tick_count = 0
+            self.last_time = current_time
+
+########################################################################################
+########################################################################################
+# MAIN
+########################################################################################
+########################################################################################
+
+
+    def update(self):
+        # THIS IS BOOST, TO BE UPDATED
+        if self.input.is_key_pressed("k"):
+            self.objects.jetSki.updateJetSki(self.input, self.delta_time, True)
+        else:
+            self.objects.jetSki.updateJetSki(self.input, self.delta_time, False)
+            
+        self.ball_collisions()
         self.camera_updates()
+        self.showFPS()
+        self.objects.update_circle_position()  # Update the circle position
         self.renderer.render(self.scene, self.camera)
+
+
 
 if __name__ == "__main__":
     Main(screen_size=[SCREEN_WIDTH, SCREE_HEIGHT]).run()

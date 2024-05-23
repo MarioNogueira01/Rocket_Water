@@ -2,6 +2,7 @@ import math
 
 from core_ext.mesh import Mesh
 from core_ext.texture import Texture
+from geometry.circleGeometry import CircleGeometry
 from geometry.objGeo import ObjGeo
 from geometry.rectangle import RectangleGeometry
 from geometry.sphere import SphereGeometry
@@ -13,8 +14,6 @@ class ObjectCreator:
         self.example = example
         self.create_objects()
         self.ball_velocity = [0, 0, 0]  # Initialize ball velocity
-        self.gravity = -0.5  # Gravity constant, negative to indicate downward force
-        self.attrition = 0.995  # Attrition factor, slightly less than 1
 
 
     def create_objects(self):
@@ -55,3 +54,16 @@ class ObjectCreator:
         self.jetSki.rotate_y((math.pi) * 1.5)
         self.jetSki.set_position([0.5, 0.3, 5])  # Adjust position as needed
         self.example.scene.add(self.jetSki)   
+
+        # Create and add the circle
+        circle_geometry = CircleGeometry(inner_radius=0.4, outer_radius=0.6, segments=64)
+        circle_material = TextureMaterial(texture=Texture(file_name="images/branco.jpg"))  # Use an appropriate texture
+        self.circle = Mesh(circle_geometry, circle_material)
+        self.example.scene.add(self.circle)
+        
+        # Ensure initial position is correct
+        self.update_circle_position()
+
+    def update_circle_position(self):
+        ball_pos = self.ball.get_position()
+        self.circle.set_position([ball_pos[0], 0.1, ball_pos[2]])

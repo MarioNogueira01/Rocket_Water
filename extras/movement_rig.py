@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from constants import *
 from core_ext.object3d import Object3D
 
 class MovementRig(Object3D):
@@ -28,27 +29,26 @@ class MovementRig(Object3D):
     def remove(self, child):
         self._look_attachment.remove(child)
 
-    def updateObject(self, input_object, delta_time, isJetSki, apply_gravity=True):
-        move_amount = self._units_per_second * delta_time
+    def updateJetSki(self, input_object, delta_time, withBoost):
+        if withBoost:
+            move_amount = JETSKI_SPEED * JETSKI_SPEED_BOOST * delta_time
+        else:
+            move_amount = JETSKI_SPEED * delta_time
+
         rotate_amount = self._degrees_per_second * (math.pi / 180) * delta_time
 
-        if isJetSki:
-            if input_object.is_key_pressed("w"):
-                self.translate(-move_amount, 0, 0)
-            if input_object.is_key_pressed("s"):
-                self.translate(move_amount, 0, 0)
-            if input_object.is_key_pressed("a"):
-                self.rotate_y(rotate_amount)
-            if input_object.is_key_pressed("d"):
-                self.rotate_y(-rotate_amount)   
-
-        if hasattr(self, 'velocity'):
-            self.translate(self.velocity[0] * delta_time, self.velocity[1] * delta_time, self.velocity[2] * delta_time)
-            # if apply_gravity:
-                # self.velocity[1] += self.parent.gravity * delta_time  # Apply gravity to the y-component
+        if input_object.is_key_pressed("w"):
+            self.translate(-move_amount, 0, 0)
+        if input_object.is_key_pressed("s"):
+            self.translate(move_amount, 0, 0)
+        if input_object.is_key_pressed("a"):
+            self.rotate_y(rotate_amount)
+        if input_object.is_key_pressed("d"):
+            self.rotate_y(-rotate_amount)   
 
        
-
+    def updateBall(self, delta_time):
+        self.translate(self.velocity[0] * delta_time, self.velocity[1] * delta_time, self.velocity[2] * delta_time)
 
     def get_position(self):
         return self.global_position
@@ -82,7 +82,7 @@ class MovementRig(Object3D):
 
         new_camera_position = np.array(target_position) - direction * distance
 
-        if(look_at_position[1] > target_position[1]+1):
+        if(look_at_position[1] > target_position[1]+2):
             new_camera_position[1] += y_elevate + 2 # Small Correction
         else:
             new_camera_position[1] += y_elevate # Small Correction
