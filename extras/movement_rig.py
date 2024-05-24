@@ -29,8 +29,8 @@ class MovementRig(Object3D):
     def remove(self, child):
         self._look_attachment.remove(child)
 
-    def updateJetSki(self, input_object, delta_time, withBoost):
-        if withBoost:
+    def updateJetSki(self, input_object, delta_time):
+        if input_object.is_key_pressed("k"):
             move_amount = JETSKI_SPEED * JETSKI_SPEED_BOOST * delta_time
         else:
             move_amount = JETSKI_SPEED * delta_time
@@ -77,15 +77,12 @@ class MovementRig(Object3D):
         target_position = target.global_position
         look_at_position = look_at_target.global_position
 
+        target_position[1] += 2
+
         direction = np.array(look_at_position) - np.array(target_position)
         direction = direction / np.linalg.norm(direction)
 
         new_camera_position = np.array(target_position) - direction * distance
-
-        if(look_at_position[1] > target_position[1]+2):
-            new_camera_position[1] += y_elevate + 2 # Small Correction
-        else:
-            new_camera_position[1] += y_elevate # Small Correction
 
         self.set_position(new_camera_position.tolist())
         self.look_at(look_at_position)

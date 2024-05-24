@@ -16,10 +16,8 @@ class Main(Base):
         self.camera_rig = MovementRig()
         self.camera_rig.add(self.camera)
         self.scene.add(self.camera_rig)
-
         self.objects = ObjectCreator(self)
         self.camera_follow_mode = True
-
         self.last_time = time.time()
         self.frame_count = 0
         self.fps = 0
@@ -96,22 +94,34 @@ class Main(Base):
 
 ########################################################################################
 ########################################################################################
+# JETSKI MOVEMENT
+########################################################################################
+########################################################################################
+
+    def jetski_control(self):
+        self.objects.jetSki.updateJetSki(self.input, self.delta_time)
+
+########################################################################################
+########################################################################################
+# CIRCLE THAT FOLLOWS BALL ON THE GROUND
+########################################################################################
+########################################################################################
+
+    def circle_following_ball_ground(self):
+        self.objects.update_circle_position()
+
+########################################################################################
+########################################################################################
 # MAIN
 ########################################################################################
 ########################################################################################
 
-
-    def update(self):
-        # THIS IS BOOST, TO BE UPDATED
-        if self.input.is_key_pressed("k"):
-            self.objects.jetSki.updateJetSki(self.input, self.delta_time, True)
-        else:
-            self.objects.jetSki.updateJetSki(self.input, self.delta_time, False)
-            
+    def update(self):            
+        self.jetski_control()
         self.ball_collisions()
         self.camera_updates()
         self.showFPS()
-        self.objects.update_circle_position()  # Update the circle position
+        self.circle_following_ball_ground()
         self.renderer.render(self.scene, self.camera)
 
 

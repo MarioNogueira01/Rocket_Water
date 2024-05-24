@@ -18,7 +18,7 @@ class ObjectCreator:
 
     def create_objects(self):
         # Add skysphere
-        sky_geometry = SphereGeometry(radius=50)
+        sky_geometry = SphereGeometry(radius=200)
         sky_material = TextureMaterial(texture=Texture(file_name="images/sky.jpg"))
         sky = Mesh(sky_geometry, sky_material)
         self.example.scene.add(sky)
