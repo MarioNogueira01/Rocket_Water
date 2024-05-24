@@ -126,3 +126,11 @@ class Object3D:
     def look_at(self, target_position):
         self._matrix = Matrix.make_look_at(self.global_position, target_position)
 
+    def scale(self, sx, sy=None, sz=None, local=True):
+        if sy is None or sz is None:
+            # If only one scaling factor is provided, use uniform scaling
+            sy = sx
+            sz = sx
+        # Create a non-uniform scaling matrix
+        m = Matrix.make_scale_non_uniform(sx, sy, sz)
+        self.apply_matrix(m, local)

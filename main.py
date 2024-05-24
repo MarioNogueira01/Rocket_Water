@@ -76,6 +76,31 @@ class Main(Base):
 
 ########################################################################################
 ########################################################################################
+# WALL COLLISION SYSTEM
+########################################################################################
+########################################################################################
+
+    def check_wall_collisions(self):
+        ball_pos = self.objects.ball.get_position()
+        next_ball_pos = [ball_pos[i] + self.objects.ball_velocity[i] * self.delta_time for i in range(3)]
+
+        # Check collision with each wall
+        for wall in self.objects.walls:
+            (min_x, max_x), (min_z, max_z) = wall.bounds
+            if min_x <= next_ball_pos[0] <= max_x and min_z <= next_ball_pos[2] <= max_z:
+                # If collision is detected, reverse the appropriate component of velocity
+                # Assuming walls are either horizontal or vertical
+                if wall in self.objects.walls[:2]:  # Horizontal walls
+                    self.objects.ball_velocity[2] = -self.objects.ball_velocity[2]
+                else:  # Vertical walls
+                    self.objects.ball_velocity[0] = -self.objects.ball_velocity[0]
+                break
+
+
+
+
+########################################################################################
+########################################################################################
 # SHOW FPS
 ########################################################################################
 ########################################################################################
@@ -119,6 +144,7 @@ class Main(Base):
     def update(self):            
         self.jetski_control()
         self.ball_collisions()
+        #self.check_wall_collisions()
         self.camera_updates()
         self.showFPS()
         self.circle_following_ball_ground()

@@ -86,3 +86,4 @@ class MovementRig(Object3D):
 
         self.set_position(new_camera_position.tolist())
         self.look_at(look_at_position)
+

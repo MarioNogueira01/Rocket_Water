@@ -70,6 +70,16 @@ class Matrix:
              [0, 0, s, 0],
              [0, 0, 0, 1]]
         ).astype(float)
+    
+    @staticmethod
+    def make_scale_non_uniform(sx, sy, sz):
+        return numpy.array(
+            [[sx, 0, 0, 0],
+            [0, sy, 0, 0],
+            [0, 0, sz, 0],
+            [0, 0, 0, 1]]
+        ).astype(float)
+
 
     @staticmethod
     def make_perspective(angle_of_view=60, aspect_ratio=1, near=0.1, far=1000):
