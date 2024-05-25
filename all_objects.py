@@ -1,4 +1,5 @@
 import math
+import OpenGL.GL as GL
 
 from core_ext.mesh import Mesh
 from core_ext.texture import Texture
@@ -8,6 +9,7 @@ from geometry.rectangle import RectangleGeometry
 from geometry.sphere import SphereGeometry
 from material.texture import TextureMaterial
 from extras.movement_rig import MovementRig
+
 
 class ObjectCreator:
     def __init__(self, example):
@@ -178,9 +180,11 @@ class ObjectCreator:
         field_width = 80
         wall_thickness = 5  # More reasonable thickness for the walls
         exclusion_zone_width = 20  # Width of the exclusion zone around each goal
+        scale_factor = 20.0  # Fator de escala para "diminuir" a imagem e repetir a textura
 
-        # Material for the walls
-        wall_material = TextureMaterial(texture=Texture(file_name="images/field_wall.png"))
+        # Criando o material para as paredes com a textura repetida
+        wall_texture = Texture(file_name="images/field_wall.png", property_dict={"wrap": GL.GL_REPEAT}, scale_factor=scale_factor)
+        wall_material = TextureMaterial(texture=wall_texture)
         wall_material.visible = True
 
         # Initialize the list of walls
@@ -188,31 +192,31 @@ class ObjectCreator:
 
         # Create wall geometries for horizontal (top and bottom) and vertical (left and right) walls
         horizontal_walls = [
-            RectangleGeometry(width=field_width - 2 * exclusion_zone_width, height=wall_thickness),
-            RectangleGeometry(width=field_width - 2 * exclusion_zone_width, height=wall_thickness)
-        ]
-        vertical_walls = [
-            RectangleGeometry(width=wall_thickness, height=field_length - 2 * wall_thickness),  # Subtracting the horizontal wall space
-            RectangleGeometry(width=wall_thickness, height=field_length - 2 * wall_thickness)
+            RectangleGeometry(width=field_width, height=field_length - 2 * wall_thickness),
+            RectangleGeometry(width=field_width, height=field_length - 2 * wall_thickness),
+            RectangleGeometry(width=field_length, height=field_length - 2 * wall_thickness),  # Subtracting the horizontal wall space
+            RectangleGeometry(width=field_length, height=field_length - 2 * wall_thickness)
         ]
 
         # Wall positions assuming the center of the field as the origin
         wall_positions = [
-            [0, 0, -(field_length / 2 + wall_thickness / 2)],  # Bottom wall
-            [0, 0, (field_length / 2 + wall_thickness / 2)],   # Top wall
-            [-(field_width / 2 + wall_thickness / 2), 0, 0],   # Left wall
-            [(field_width / 2 + wall_thickness / 2), 0, 0]     # Right wall
+            #paredes ao lado da baliza
+            [0, 0, -(field_length / 2 - wall_thickness / 2 + 1)],  # Bottom wall
+            [0, 0, (field_length / 2 - wall_thickness / 2 + 1)],   # Top wall
+            #paredes laterais  x,z,
+            [-(field_width / 2 - wall_thickness / 2 + 1), 0, 0],   # Left wall
+            [(field_width / 2 - wall_thickness / 2 + 1), 0, 0]     # Right wall 
         ]
 
         # Loop to add horizontal and vertical walls
-        for i, geom in enumerate(horizontal_walls + vertical_walls):
+        for i, geom in enumerate(horizontal_walls):
             wall_mesh = Mesh(geom, wall_material)
             wall_mesh.set_position(wall_positions[i])
             if i < 2:  # Horizontal walls
-                wall_mesh.rotate_x(-math.pi / 2)  # Rotate to lay flat
                 wall_mesh.bounds = ([-field_width / 2 + exclusion_zone_width, field_width / 2 - exclusion_zone_width],
                                     [-field_length / 2, field_length / 2])  # Fixed bounds for horizontal
-            else:  # Vertical walls
+            else:  # Behind Goal walls
+                wall_mesh.rotate_y(-math.pi / 2) #rotate 90 degreas
                 wall_mesh.bounds = ([-field_width / 2, field_width / 2],
                                     [-field_length / 2 + wall_thickness, field_length / 2 - wall_thickness])  # Fixed bounds for vertical
             self.example.scene.add(wall_mesh)

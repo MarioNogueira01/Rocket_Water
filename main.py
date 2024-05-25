@@ -81,25 +81,44 @@ class Main(Base):
 ########################################################################################
 
     def check_wall_collisions(self):
-        ball_pos = self.objects.ball.get_position()
+        ball_pos = self.objects.ball.global_position
         next_ball_pos = [ball_pos[i] + self.objects.ball_velocity[i] * self.delta_time for i in range(3)]
+
+        # Flags to indicate collision with walls
+        collided_with_horizontal_wall = False
+        collided_with_vertical_wall = False
 
         # Check collision with each wall
         for wall in self.objects.walls:
             (min_x, max_x), (min_z, max_z) = wall.bounds
-            if min_x <= next_ball_pos[0] <= max_x and min_z <= next_ball_pos[2] <= max_z:
-                # If collision is detected, reverse the appropriate component of velocity
-                # Assuming walls are either horizontal or vertical
-                if wall in self.objects.walls[:2]:  # Horizontal walls
-                    self.objects.ball_velocity[2] = -self.objects.ball_velocity[2]
-                else:  # Vertical walls
-                    self.objects.ball_velocity[0] = -self.objects.ball_velocity[0]
-                break
+
+            # Check collision with horizontal walls (top and bottom)
+            if wall in self.objects.walls[:2]:
+                if min_x*2 <= next_ball_pos[0] <= max_x*2:
+                    if next_ball_pos[2] < min_z or next_ball_pos[2] > max_z:
+                        self.objects.ball_velocity[2] = -self.objects.ball_velocity[2]  # Invert Z velocity
+                        collided_with_horizontal_wall = True
+                        break
+
+            # Check collision with vertical walls (left and right)
+            else:
+                if min_z*2 <= next_ball_pos[2] <= max_z*2:
+                    if next_ball_pos[0] < min_x or next_ball_pos[0] > max_x:
+                        self.objects.ball_velocity[0] = -self.objects.ball_velocity[0]  # Invert X velocity
+                        collided_with_vertical_wall = True
+                        break
+
+        # Handle collision at the corners
+        if collided_with_horizontal_wall and collided_with_vertical_wall:
+            self.objects.ball_velocity[0] = -self.objects.ball_velocity[0]
+            self.objects.ball_velocity[2] = -self.objects.ball_velocity[2]
 
 
 
 
-########################################################################################
+
+
+#########################################aa###############################################
 ########################################################################################
 # SHOW FPS
 ########################################################################################
@@ -144,7 +163,7 @@ class Main(Base):
     def update(self):            
         self.jetski_control()
         self.ball_collisions()
-        #self.check_wall_collisions()
+        self.check_wall_collisions()
         self.camera_updates()
         self.showFPS()
         self.circle_following_ball_ground()

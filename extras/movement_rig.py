@@ -9,7 +9,7 @@ class MovementRig(Object3D):
     up and down (all local translations), as well as 
     turning left and right, and looking up and down
     """
-    def __init__(self, units_per_second=1, degrees_per_second=60):
+    def __init__(self, units_per_second=1, degrees_per_second=30):
         # Initialize base Object3D.
         # Controls movement and turn left/right.
         super().__init__()
