@@ -25,14 +25,21 @@ class ObjectCreator:
 
 
     def create_boost_box(self):
-        box_geometry = RectangleGeometry(width=2, height=2)
-        box_material = TextureMaterial(texture=Texture(file_name="images/preto.jpg"))
-        boost_box = Mesh(box_geometry, box_material)
+        box_geometry = ObjGeo('models/boost.obj')
+        box_material = TextureMaterial(texture=Texture(file_name="images/boost.png"))
+        boost_box_mesh = Mesh(box_geometry, box_material)
+        boost_box = MovementRig()  # Using a MovementRig or similar object to handle transformations
+        boost_box.add(boost_box_mesh)
+
+        # Set the position and scale using the rig
         random_x = random.uniform(-FIELD_WIDTH / 2 + FIELD_WIDTH_OFFSET, FIELD_WIDTH / 2 - FIELD_WIDTH_OFFSET)
         random_z = random.uniform(-FIELD_LENGTH / 2 + FIELD_LENGTH_OFFSET, FIELD_LENGTH / 2 - FIELD_LENGTH_OFFSET)
-        boost_box.set_position([random_x, 0.5, random_z])
+        boost_box.set_position([random_x, 0.8, random_z])
+        boost_box.scale(0.015)  # Adjust this value to scale the boost box appropriately
+
         self.boost_boxes.append(boost_box)
         self.example.scene.add(boost_box)
+
 
     def remove_box(self, box):
         self.boost_boxes.remove(box)
