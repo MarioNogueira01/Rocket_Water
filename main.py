@@ -18,14 +18,13 @@ class Main(Base):
         self.scene.add(self.camera_rig)
         self.objects = ObjectCreator(self)
         self.camera_follow_mode = True
-        self.last_time = time.time()
+        self.last_time_fps = time.time()
         self.last_time_box = time.time()
         self.frame_count = 0
         self.fps = 0
         self.boost = 100
-        self.objects.create_boost_box()  # Add this line to create the boost box
-        self.boost_active = False
-        self.existsBoost = 0
+        self.objects.create_boost_box() 
+        self.boostsCounter = 0
 
 ########################################################################################
 ########################################################################################
@@ -131,7 +130,7 @@ class Main(Base):
 
     def showFPS(self):
         current_time = time.time()
-        elapsed_time = current_time - self.last_time
+        elapsed_time = time.time() - self.last_time_fps
         self.frame_count += 1
         
         if elapsed_time >= 1.0:
@@ -139,7 +138,7 @@ class Main(Base):
             print(f"FPS: {self.fps:.0f}")
             self.frame_count = 0
             self.tick_count = 0
-            self.last_time = current_time
+            self.last_time_fps = current_time
 
 ########################################################################################
 ########################################################################################
@@ -212,7 +211,7 @@ class Main(Base):
                 self.boost += BOOST_AMOUNT
                 self.boost = min(self.boost, MAX_BOOST)
                 self.objects.remove_box(boost_box)
-                break  # Only handle one collision per update
+                break
 
 ########################################################################################
 ########################################################################################
@@ -224,11 +223,8 @@ class Main(Base):
         ball_pos = self.objects.ball.global_position
         next_ball_pos = [ball_pos[i] + self.objects.ball_velocity[i] * self.delta_time for i in range(3)]
 
-        # Check collision with each hitbox (goal)
         for i, hitBox in enumerate(self.objects.hitBoxes):
             (min_x, max_x), (min_z, max_z) = hitBox.bounds
-
-            # Check collision with hitboxes
             if i==0:
                 if min_x <= next_ball_pos[0] <= max_x and min_z-3 <= next_ball_pos[2] <= max_z-3:
                     print("MyGoal")
