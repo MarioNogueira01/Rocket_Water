@@ -77,6 +77,17 @@ class ObjectCreator:
         self.jetSki.set_position([0.5, 0.3, 5])  # Adjust position as needed
         self.example.scene.add(self.jetSki)   
 
+        # Load jetski object from OBJ file
+        opponent_geometry = ObjGeo('models/jetSki.obj')
+        opponent_texture = Texture(file_name="images/jetSki.jpg")
+        opponent_material = TextureMaterial(texture=opponent_texture)
+        self.opponent_mesh = Mesh(opponent_geometry, opponent_material)
+        self.opponent = MovementRig()
+        self.opponent.add(self.opponent_mesh)
+        self.opponent.rotate_y((math.pi) / 2 )
+        self.opponent.set_position([0.5, 0.3, -13])  # Adjust position as needed
+        self.example.scene.add(self.opponent)   
+
         # Create and add the circle
         circle_geometry = CircleGeometry(inner_radius=0.4, outer_radius=0.6, segments=64)
         circle_material = TextureMaterial(texture=Texture(file_name="images/branco.jpg"))  # Use an appropriate texture

@@ -41,14 +41,22 @@ class MovementRig(Object3D):
             self.translate(-move_amount, 0, 0)
         if input_object.is_key_pressed("s"):
             self.translate(move_amount, 0, 0)
-        if input_object.is_key_pressed("a"):
-            self.rotate_y(rotate_amount)
-        if input_object.is_key_pressed("d"):
-            self.rotate_y(-rotate_amount)   
+            if input_object.is_key_pressed("a"):
+                self.rotate_y(-rotate_amount)
+            if input_object.is_key_pressed("d"):
+                self.rotate_y(rotate_amount)
+        else:   
+            if input_object.is_key_pressed("a"):
+                self.rotate_y(rotate_amount)
+            if input_object.is_key_pressed("d"):
+                self.rotate_y(-rotate_amount)   
 
        
     def updateBall(self, delta_time):
         self.translate(self.velocity[0] * delta_time, self.velocity[1] * delta_time, self.velocity[2] * delta_time)
+
+    def updateOpponent(self, delta_time, x):
+        self.translate(-x * delta_time,0,0)
 
     def get_position(self):
         return self.global_position

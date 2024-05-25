@@ -15,7 +15,7 @@ class Main(Base):
     def initialize(self):
         pygame.init()
         pygame.freetype.init()
-        self.font = pygame.freetype.SysFont(None, 24)
+        self.font = pygame.freetype.Font("game_font.otf", 24)
         self.renderer = Renderer()
         self.scene = Scene()
         self.camera = Camera(aspect_ratio=SCREEN_WIDTH / SCREEN_HEIGHT)
@@ -28,7 +28,7 @@ class Main(Base):
         self.last_time_box = time.time()
         self.frame_count = 0
         self.fps = 0
-        self.boost = 2
+        self.boost = 100
         self.objects.create_boost_box()
         self.boostsCounter = 0
         self.score = 0
@@ -56,18 +56,16 @@ class Main(Base):
     ########################################################################################
     ########################################################################################
 
-    def check_collision(self):
-        jetski_pos = self.objects.jetSki.global_position
+    def check_ball_collision_with(self, jetski_pos):
         ball_pos = self.objects.ball.global_position
 
         distance = math.sqrt(
             (jetski_pos[0] - ball_pos[0]) ** 2 + (jetski_pos[1] - ball_pos[1]) ** 2 + (jetski_pos[2] - ball_pos[2]) ** 2)
-        collision_distance = HITBOX_BUFFER
 
-        if distance < collision_distance:
+        if distance < HITBOX_BUFFER:
             direction = [
                 ball_pos[0] - jetski_pos[0],
-                ball_pos[1] - jetski_pos[1],
+                ball_pos[1] - jetski_pos[1]-0.1,
                 ball_pos[2] - jetski_pos[2]
             ]
             magnitude = math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2)
@@ -77,7 +75,8 @@ class Main(Base):
             self.objects.ball_velocity = [d * BALL_SPEED for d in direction]
 
     def ball_collisions(self):
-        self.check_collision()
+        self.check_ball_collision_with(self.objects.jetSki.global_position)
+        self.check_ball_collision_with(self.objects.opponent.global_position)
 
         if self.objects.ball.get_position()[1] > 0.5:
             self.objects.ball_velocity[1] += BALL_GRAVITY * self.delta_time
@@ -221,6 +220,8 @@ class Main(Base):
         GL.glWindowPos2d(position_x + player_text_width + 20, SCREEN_HEIGHT - 30)
         GL.glDrawPixels(opponent_text_surface.get_width(), opponent_text_surface.get_height(), GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, opponent_text_data)
 
+        
+
     ########################################################################################
     ########################################################################################
     # BOOST SPAWN
@@ -261,22 +262,47 @@ class Main(Base):
             (min_x, max_x), (min_z, max_z) = hitBox.bounds
             if i == 0:
                 if min_x <= next_ball_pos[0] <= max_x and min_z - 3 <= next_ball_pos[2] <= max_z - 3:
-                    self.objects.ball.set_position([0.5, 0.5, -4])
-                    self.objects.ball_velocity = [0, 0, 0]
-                    self.objects.jetSki.set_position([0.5, 0.3, 5])
-                    # falta fazer um rotation
-                    self.boost = 2
-                    self.score += 1
+                    self.goalScored(True)
                     break
             elif i == 1:
                 if min_x <= next_ball_pos[0] <= max_x and min_z + 3 <= next_ball_pos[2] <= max_z + 3:
-                    self.objects.ball.set_position([0.5, 0.5, -4])
-                    self.objects.ball_velocity = [0, 0, 0]
-                    self.objects.jetSki.set_position([0.5, 0.3, 5])
-                    self.boost = 2
-                    # falta fazer um rotation
-                    self.opponent_score += 1
+                    self.goalScored(False)
                     break
+
+
+    def goalScored(self, playerScored):
+        self.objects.ball.set_position([0.5, 0.5, -4])
+        self.objects.ball_velocity = [0, 0, 0]
+        self.objects.jetSki.set_position([0.5, 0.3, 5])
+        self.objects.jetSki.set_rotate_y(math.pi * 1.5)
+        self.objects.opponent.set_position([0.5, 0.3, -13])
+        self.objects.opponent.set_rotate_y(math.pi * 1.5)
+        if playerScored:
+            self.score += 1
+        else:
+            self.opponent_score += 1
+
+    ########################################################################################
+    ########################################################################################
+    # MAIN
+    ########################################################################################
+    ########################################################################################
+
+    def opponentAI(self):
+        # TO FIX
+        # TODO
+        print(f"BEFORE: {self.objects.opponent.global_position}")
+        opponent_position = self.objects.opponent.global_position
+        target_position = self.objects.ball.global_position
+        target_position[0] = -0.5
+        target_position[1] = 0
+        # if target_position[0] - opponent_position[0] < 0.1 and target_position[2] - opponent_position[2] < 0.1:
+            # return
+        self.objects.opponent.look_at(target_position)
+        self.objects.opponent.rotate_y(math.pi * 1.5)
+        self.objects.opponent.updateOpponent(self.delta_time, JETSKI_SPEED)
+        print(f"AFTER: {self.objects.opponent.global_position}")
+
 
     ########################################################################################
     ########################################################################################
@@ -293,6 +319,8 @@ class Main(Base):
         self.showFPS()
         self.circle_following_ball_ground()
         self.boost_box_logic()
+        if self.fps > 30:
+            self.opponentAI()
         self.renderer.hud.update_boost_vertices(self.update_bar_boost())
         self.renderer.render(self.scene, self.camera)
         self.render_scores(self.score, self.opponent_score)

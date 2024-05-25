@@ -52,6 +52,17 @@ class Matrix:
         ).astype(float)
     
     @staticmethod
+    def set_rotation_y(angle):
+        c = cos(angle)
+        s = sin(angle)
+        return numpy.array(
+            [[c,  0,  s,  0],
+             [0,  1,  0,  0],
+             [-s, 0,  c,  0],
+             [0,  0,  0,  1]]
+        ).astype(float)
+    
+    @staticmethod
     def make_rotation_z(angle):
         c = cos(angle)
         s = sin(angle)

@@ -109,6 +109,18 @@ class Object3D:
         m = Matrix.make_rotation_y_around_point(angle, x, y, z)
         self.apply_matrix(m, local)
 
+    def set_rotate_y(self, angle, local=True):
+        # Extract translation components from the matrix
+        translation = self._matrix[:, 3].copy()
+        # Create rotation matrix
+        rotation_matrix = Matrix.make_rotation_y(angle)
+        # Set the translation components back
+        if local:
+            self._matrix = rotation_matrix
+        else:
+            self._matrix[:3, :3] = rotation_matrix[:3, :3]
+        self._matrix[:, 3] = translation
+
     def rotate_z(self, angle, local=True):
         m = Matrix.make_rotation_z(angle)
         self.apply_matrix(m, local)
