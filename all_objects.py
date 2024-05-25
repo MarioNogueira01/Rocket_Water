@@ -1,6 +1,8 @@
 import math
+import random
 import OpenGL.GL as GL
 
+from constants import *
 from core_ext.mesh import Mesh
 from core_ext.texture import Texture
 from geometry.circleGeometry import CircleGeometry
@@ -17,8 +19,24 @@ class ObjectCreator:
         self.create_objects()
         self.create_field()
         self.create_contoured_invisible_walls()
+        self.create_hitboxGoals()
         self.ball_velocity = [0, 0, 0]  # Initialize ball velocity
+        self.boost_boxes = []  # List to store boost boxes
 
+
+    def create_boost_box(self):
+        box_geometry = RectangleGeometry(width=2, height=2)
+        box_material = TextureMaterial(texture=Texture(file_name="images/preto.jpg"))
+        boost_box = Mesh(box_geometry, box_material)
+        random_x = random.uniform(-FIELD_WIDTH / 2 + FIELD_WIDTH_OFFSET, FIELD_WIDTH / 2 - FIELD_WIDTH_OFFSET)
+        random_z = random.uniform(-FIELD_LENGTH / 2 + FIELD_LENGTH_OFFSET, FIELD_LENGTH / 2 - FIELD_LENGTH_OFFSET)
+        boost_box.set_position([random_x, 0.5, random_z])
+        self.boost_boxes.append(boost_box)
+        self.example.scene.add(boost_box)
+
+    def remove_box(self, box):
+        self.boost_boxes.remove(box)
+        self.example.scene.remove(box)
 
     def create_objects(self):
         # Add skysphere
@@ -73,9 +91,6 @@ class ObjectCreator:
         self.circle.set_position([ball_pos[0], 0.1, ball_pos[2]])
 
     def create_field(self, goal_width=20, goal_depth=10):
-        # Adjusted field dimensions and positions
-        field_length = 120
-        field_width = 80
 
         # Umbrella setup with increased scale
         umbrella_geometry = ObjGeo('models/umbrella.obj')
@@ -85,10 +100,10 @@ class ObjectCreator:
 
         # Positions for the four corners
         corner_positions = [
-            [-field_width / 2, 0, -field_length / 2],
-            [field_width / 2, 0, -field_length / 2],
-            [-field_width / 2, 0, field_length / 2],
-            [field_width / 2, 0, field_length / 2]
+            [-FIELD_WIDTH / 2, 0, -FIELD_LENGTH / 2],
+            [FIELD_WIDTH / 2, 0, -FIELD_LENGTH / 2],
+            [-FIELD_WIDTH / 2, 0, FIELD_LENGTH / 2],
+            [FIELD_WIDTH / 2, 0, FIELD_LENGTH / 2]
         ]
         
         # Create and place scaled umbrellas at each corner
@@ -120,14 +135,14 @@ class ObjectCreator:
         scaled_ring_diameter = original_ring_diameter * ring_scale  # e.g., 0.05 if scale is 0.05
 
         # Adjust ring spacing to ensure no overlap
-        ring_spacing_width = max((field_width / num_rings_width), scaled_ring_diameter)
-        ring_spacing_length = max((field_length / num_rings_length), scaled_ring_diameter)
+        ring_spacing_width = max((FIELD_WIDTH / num_rings_width), scaled_ring_diameter)
+        ring_spacing_length = max((FIELD_LENGTH / num_rings_length), scaled_ring_diameter)
 
         # Place rings along the width on both ends of the field (excluding goal areas)
         for i in range(num_rings_width):
-            x_position = -field_width / 2 + i * ring_spacing_width
+            x_position = -FIELD_WIDTH / 2 + i * ring_spacing_width
             if not (gap_start < x_position < gap_end):  # Ensure rings are placed outside the goal gap
-                for z_position in [-field_length / 2, field_length / 2]:
+                for z_position in [-FIELD_LENGTH / 2, FIELD_LENGTH / 2]:
                     ring_mesh = Mesh(ring_geometry, ring_material)
                     ring = MovementRig()
                     ring.add(ring_mesh)
@@ -137,9 +152,9 @@ class ObjectCreator:
 
         # Place rings along the length on both sides of the field, ensuring they do not extend beyond field ends
         for i in range(num_rings_length):
-            z_position = -field_length / 2 + i * ring_spacing_length
-            if -field_length / 2 < z_position < field_length / 2:  # Ensure rings do not extend beyond field ends
-                for x_position in [-field_width / 2, field_width / 2]:
+            z_position = -FIELD_LENGTH / 2 + i * ring_spacing_length
+            if -FIELD_LENGTH / 2 < z_position < FIELD_LENGTH / 2:  # Ensure rings do not extend beyond field ends
+                for x_position in [-FIELD_WIDTH / 2, FIELD_WIDTH / 2]:
                     ring_mesh = Mesh(ring_geometry, ring_material)
                     ring = MovementRig()
                     ring.add(ring_mesh)
@@ -162,8 +177,8 @@ class ObjectCreator:
 
         # Goal positions adjusted to center the goal
         goal_positions = [
-            [-gap_start-2, 0, -field_length / 2],  # Adjusted for correct centering
-            [gap_start+2, 0, field_length / 2]
+            [-gap_start-2, 0, -FIELD_LENGTH / 2],  # Adjusted for correct centering
+            [gap_start+2, 0, FIELD_LENGTH / 2]
         ]
 
         for idx, pos in enumerate(goal_positions):
@@ -176,8 +191,6 @@ class ObjectCreator:
             self.example.scene.add(goal)
 
     def create_contoured_invisible_walls(self):
-        field_length = 120
-        field_width = 80
         wall_thickness = 5  # More reasonable thickness for the walls
         exclusion_zone_width = 20  # Width of the exclusion zone around each goal
         scale_factor = 20.0  # Fator de escala para "diminuir" a imagem e repetir a textura
@@ -192,20 +205,20 @@ class ObjectCreator:
 
         # Create wall geometries for horizontal (top and bottom) and vertical (left and right) walls
         horizontal_walls = [
-            RectangleGeometry(width=field_width, height=field_length - 2 * wall_thickness),
-            RectangleGeometry(width=field_width, height=field_length - 2 * wall_thickness),
-            RectangleGeometry(width=field_length, height=field_length - 2 * wall_thickness),  # Subtracting the horizontal wall space
-            RectangleGeometry(width=field_length, height=field_length - 2 * wall_thickness)
+            RectangleGeometry(width=FIELD_WIDTH, height=FIELD_LENGTH - 2 * wall_thickness),
+            RectangleGeometry(width=FIELD_WIDTH, height=FIELD_LENGTH - 2 * wall_thickness),
+            RectangleGeometry(width=FIELD_LENGTH, height=FIELD_LENGTH - 2 * wall_thickness),  # Subtracting the horizontal wall space
+            RectangleGeometry(width=FIELD_LENGTH, height=FIELD_LENGTH - 2 * wall_thickness)
         ]
 
         # Wall positions assuming the center of the field as the origin
         wall_positions = [
             #paredes ao lado da baliza
-            [0, 0, -(field_length / 2 - wall_thickness / 2 + 1)],  # Bottom wall
-            [0, 0, (field_length / 2 - wall_thickness / 2 + 1)],   # Top wall
+            [0, 0, -(FIELD_LENGTH / 2 - wall_thickness / 2 + 1)],  # Bottom wall
+            [0, 0, (FIELD_LENGTH / 2 - wall_thickness / 2 + 1)],   # Top wall
             #paredes laterais  x,z,
-            [-(field_width / 2 - wall_thickness / 2 + 1), 0, 0],   # Left wall
-            [(field_width / 2 - wall_thickness / 2 + 1), 0, 0]     # Right wall 
+            [-(FIELD_WIDTH / 2 - wall_thickness / 2 + 1), 0, 0],   # Left wall
+            [(FIELD_WIDTH / 2 - wall_thickness / 2 + 1), 0, 0]     # Right wall 
         ]
 
         # Loop to add horizontal and vertical walls
@@ -213,11 +226,48 @@ class ObjectCreator:
             wall_mesh = Mesh(geom, wall_material)
             wall_mesh.set_position(wall_positions[i])
             if i < 2:  # Horizontal walls
-                wall_mesh.bounds = ([-field_width / 2 + exclusion_zone_width, field_width / 2 - exclusion_zone_width],
-                                    [-field_length / 2, field_length / 2])  # Fixed bounds for horizontal
+                wall_mesh.bounds = ([-FIELD_WIDTH / 2 + exclusion_zone_width, FIELD_WIDTH / 2 - exclusion_zone_width],
+                                    [-FIELD_LENGTH / 2, FIELD_LENGTH / 2])  # Fixed bounds for horizontal
             else:  # Behind Goal walls
                 wall_mesh.rotate_y(-math.pi / 2) #rotate 90 degreas
-                wall_mesh.bounds = ([-field_width / 2, field_width / 2],
-                                    [-field_length / 2 + wall_thickness, field_length / 2 - wall_thickness])  # Fixed bounds for vertical
+                wall_mesh.bounds = ([-FIELD_WIDTH / 2, FIELD_WIDTH / 2],
+                                    [-FIELD_LENGTH / 2 + wall_thickness, FIELD_LENGTH / 2 - wall_thickness])  # Fixed bounds for vertical
             self.example.scene.add(wall_mesh)
             self.walls.append(wall_mesh)
+
+    def create_hitboxGoals(self):
+        field_length = 120
+        wall_thickness = 5
+        scale_factor = 20.0
+
+        hitBoxes_texture = Texture(file_name="images/field_wall.png", property_dict={"wrap": GL.GL_REPEAT}, scale_factor=scale_factor)
+        hitBoxes_material = TextureMaterial(texture=hitBoxes_texture)
+        hitBoxes_material.visible = True
+
+        self.hitBoxes = []
+
+        hitBoxesWalls = [
+            RectangleGeometry(width=16, height=8),
+            RectangleGeometry(width=16, height=8)
+        ]
+
+        hitBoxes_positions = [
+            [0, 0, -(field_length / 2 - wall_thickness / 2 + 1)],
+            [0, 0, (field_length / 2 - wall_thickness / 2 + 1)]
+        ]
+
+        for i, geom in enumerate(hitBoxesWalls):
+            hitBoxes_mesh = Mesh(geom, hitBoxes_material)
+            hitBoxes_mesh.set_position(hitBoxes_positions[i])
+
+            pos_x, pos_y, pos_z = hitBoxes_positions[i]
+            width = 16 / 2
+            height = 8 / 2
+
+            hitBoxes_mesh.bounds = (
+                [pos_x - width, pos_x + width],
+                [pos_z - height, pos_z + height]
+            )
+
+            self.example.scene.add(hitBoxes_mesh)
+            self.hitBoxes.append(hitBoxes_mesh)

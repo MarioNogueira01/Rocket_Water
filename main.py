@@ -19,9 +19,13 @@ class Main(Base):
         self.objects = ObjectCreator(self)
         self.camera_follow_mode = True
         self.last_time = time.time()
+        self.last_time_box = time.time()
         self.frame_count = 0
         self.fps = 0
         self.boost = 100
+        self.objects.create_boost_box()  # Add this line to create the boost box
+        self.boost_active = False
+        self.existsBoost = 0
 
 ########################################################################################
 ########################################################################################
@@ -132,7 +136,7 @@ class Main(Base):
         
         if elapsed_time >= 1.0:
             self.fps = self.frame_count / elapsed_time
-            print(f"FPS: {self.fps:.2f}")
+            print(f"FPS: {self.fps:.0f}")
             self.frame_count = 0
             self.tick_count = 0
             self.last_time = current_time
@@ -161,7 +165,7 @@ class Main(Base):
 
 ########################################################################################
 ########################################################################################
-# MAIN
+# BOOST BAR
 ########################################################################################
 ########################################################################################
 
@@ -184,16 +188,73 @@ class Main(Base):
         ]
         return(new_vertices)
 
-    def update(self):         
+########################################################################################
+########################################################################################
+# BOOST SPAWN
+########################################################################################
+########################################################################################
+
+    def boost_box_logic(self):
+        if len(self.objects.boost_boxes) < BOOST_IN_MAP_LIMIT:
+            current_time = time.time()
+            elapsed_time = current_time - self.last_time_box
+            if elapsed_time >= TIME_DELAY_SPAWN_BOOST:
+                self.last_time_box = current_time
+                self.objects.create_boost_box()
+        self.check_boost_box_collision()
+
+    def check_boost_box_collision(self):
+        jetski_pos = self.objects.jetSki.global_position
+        for boost_box in self.objects.boost_boxes:
+            box_pos = boost_box.global_position
+            distance = math.sqrt((jetski_pos[0] - box_pos[0]) ** 2 + (jetski_pos[2] - box_pos[2]) ** 2)
+            if distance < HITBOX_BUFFER:
+                self.boost += BOOST_AMOUNT
+                self.boost = min(self.boost, MAX_BOOST)
+                self.objects.remove_box(boost_box)
+                break  # Only handle one collision per update
+
+########################################################################################
+########################################################################################
+# CHECK FOR GOALS
+########################################################################################
+########################################################################################
+
+    def check_goal_hitboxes(self):
+        ball_pos = self.objects.ball.global_position
+        next_ball_pos = [ball_pos[i] + self.objects.ball_velocity[i] * self.delta_time for i in range(3)]
+
+        # Check collision with each hitbox (goal)
+        for i, hitBox in enumerate(self.objects.hitBoxes):
+            (min_x, max_x), (min_z, max_z) = hitBox.bounds
+
+            # Check collision with hitboxes
+            if i==0:
+                if min_x <= next_ball_pos[0] <= max_x and min_z-3 <= next_ball_pos[2] <= max_z-3:
+                    print("MyGoal")
+                    break
+            elif i==1:
+                if min_x <= next_ball_pos[0] <= max_x and min_z+3 <= next_ball_pos[2] <= max_z+3:
+                    print("Adervesary goal")
+                    break
+
+########################################################################################
+########################################################################################
+# MAIN
+########################################################################################
+########################################################################################
+
+    def update(self):       
         self.jetski_control()
         self.ball_collisions()
         self.check_wall_collisions()
         self.camera_updates()
+        self.check_goal_hitboxes()
         self.showFPS()
         self.circle_following_ball_ground()
+        self.boost_box_logic()
         self.renderer.hud.update_vertices(self.updateBarBoost())
         self.renderer.render(self.scene, self.camera)
-
 
 
 if __name__ == "__main__":
