@@ -29,8 +29,8 @@ class MovementRig(Object3D):
     def remove(self, child):
         self._look_attachment.remove(child)
 
-    def updateJetSki(self, input_object, delta_time):
-        if input_object.is_key_pressed("k"):
+    def updateJetSki(self, input_object, delta_time, withBoost):
+        if withBoost:
             move_amount = JETSKI_SPEED * JETSKI_SPEED_BOOST * delta_time
         else:
             move_amount = JETSKI_SPEED * delta_time
