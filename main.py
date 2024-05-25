@@ -12,7 +12,7 @@ class Main(Base):
     def initialize(self):
         self.renderer = Renderer()
         self.scene = Scene()
-        self.camera = Camera(aspect_ratio=SCREEN_WIDTH/SCREE_HEIGHT)
+        self.camera = Camera(aspect_ratio=SCREEN_WIDTH/SCREEN_HEIGHT)
         self.camera_rig = MovementRig()
         self.camera_rig.add(self.camera)
         self.scene.add(self.camera_rig)
@@ -21,6 +21,7 @@ class Main(Base):
         self.last_time = time.time()
         self.frame_count = 0
         self.fps = 0
+        self.boost = 100
 
 ########################################################################################
 ########################################################################################
@@ -143,7 +144,11 @@ class Main(Base):
 ########################################################################################
 
     def jetski_control(self):
-        self.objects.jetSki.updateJetSki(self.input, self.delta_time)
+        if self.input.is_key_pressed("k") and self.boost > 0:
+            self.boost -= BOOST_COST
+            self.objects.jetSki.updateJetSki(self.input, self.delta_time, True)
+        else:
+            self.objects.jetSki.updateJetSki(self.input, self.delta_time, False)
 
 ########################################################################################
 ########################################################################################
@@ -160,16 +165,36 @@ class Main(Base):
 ########################################################################################
 ########################################################################################
 
-    def update(self):            
+    def map_value(self, x, in_min=0, in_max=100, out_min=0.3, out_max=0.9):
+        if x < in_min:
+            x = in_min
+        elif x > in_max:
+            x = in_max
+        return out_min + (x - in_min) * (out_max - out_min) / (in_max - in_min)
+
+    def updateBarBoost(self):
+        width = self.map_value(self.boost)
+        new_vertices = [
+            BAR_BOOST_LEFT, BAR_BOOST_BOTTOM,   0.0,  # Bottom left
+            width,          BAR_BOOST_BOTTOM,   0.0,  # Bottom right
+            width,          BAR_BOOST_TOP,      0.0,  # Top right
+            width,          BAR_BOOST_TOP,      0.0,  # Top right
+            BAR_BOOST_LEFT, BAR_BOOST_BOTTOM,   0.0,  # Top left
+            BAR_BOOST_LEFT, BAR_BOOST_TOP,      0.0   # Bottom left
+        ]
+        return(new_vertices)
+
+    def update(self):         
         self.jetski_control()
         self.ball_collisions()
         self.check_wall_collisions()
         self.camera_updates()
         self.showFPS()
         self.circle_following_ball_ground()
+        self.renderer.hud.update_vertices(self.updateBarBoost())
         self.renderer.render(self.scene, self.camera)
 
 
 
 if __name__ == "__main__":
-    Main(screen_size=[SCREEN_WIDTH, SCREE_HEIGHT]).run()
+    Main(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()
