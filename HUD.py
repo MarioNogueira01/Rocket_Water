@@ -7,14 +7,14 @@ class HUD:
         self.vbo = GL.glGenBuffers(1)
         self.shader_program = self.create_shader_program()
 
-        # Define the initial vertices for the rectangle (two triangles)
-        self.vertices = np.array([
-            -0.5, -0.5, 0.0,  # Bottom left
-             0.5, -0.5, 0.0,  # Bottom right
-             0.5,  0.5, 0.0,  # Top right
-             0.5,  0.5, 0.0,  # Top right
-            -0.5,  0.5, 0.0,  # Top left
-            -0.5, -0.5, 0.0   # Bottom left
+        # Define initial vertices for the boost bar
+        self.boost_vertices = np.array([
+            -0.9, -0.9, 0.0,  # Bottom left
+             0.9, -0.9, 0.0,  # Bottom right
+             0.9, -0.8, 0.0,  # Top right
+             0.9, -0.8, 0.0,  # Top right
+            -0.9, -0.8, 0.0,  # Top left
+            -0.9, -0.9, 0.0   # Bottom left
         ], dtype=np.float32)
 
         self.setup_buffers()
@@ -23,9 +23,10 @@ class HUD:
         # Bind VAO
         GL.glBindVertexArray(self.vao)
 
-        # Bind VBO and upload data
+        # Bind VBO and upload data for boost bar
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vertices.nbytes, self.vertices, GL.GL_DYNAMIC_DRAW)
+        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.boost_vertices.nbytes, None, GL.GL_DYNAMIC_DRAW)
+        GL.glBufferSubData(GL.GL_ARRAY_BUFFER, 0, self.boost_vertices.nbytes, self.boost_vertices)
 
         # Define the layout of the vertex data
         position = GL.glGetAttribLocation(self.shader_program, "position")
@@ -84,15 +85,17 @@ class HUD:
 
         return shader_program
 
-    def update_vertices(self, new_vertices):
-        self.vertices = np.array(new_vertices, dtype=np.float32)
+    def update_boost_vertices(self, new_vertices):
+        self.boost_vertices = np.array(new_vertices, dtype=np.float32)
         GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
-        GL.glBufferData(GL.GL_ARRAY_BUFFER, self.vertices.nbytes, self.vertices, GL.GL_DYNAMIC_DRAW)
+        GL.glBufferSubData(GL.GL_ARRAY_BUFFER, 0, self.boost_vertices.nbytes, self.boost_vertices)
 
     def render(self):
         GL.glUseProgram(self.shader_program)
         GL.glBindVertexArray(self.vao)
+
+        # Draw boost bar
         GL.glDrawArrays(GL.GL_TRIANGLES, 0, 6)
+
         GL.glBindVertexArray(0)
         GL.glUseProgram(0)
-
