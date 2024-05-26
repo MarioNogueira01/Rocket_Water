@@ -271,12 +271,13 @@ class Main(Base):
 
 
     def goalScored(self, playerScored):
-        self.objects.ball.set_position([0.5, 0.5, -4])
+        self.objects.ball.set_position(BALL_START_POSITION)
         self.objects.ball_velocity = [0, 0, 0]
-        self.objects.jetSki.set_position([0.5, 0.3, 5])
+        self.objects.jetSki.set_position(PLAYER_START_POSITION)
         self.objects.jetSki.set_rotate_y(math.pi * 1.5)
-        self.objects.opponent.set_position([0.5, 0.3, -13])
+        self.objects.opponent.set_position(OPPONENT_START_POSITION)
         self.objects.opponent.set_rotate_y(math.pi * 1.5)
+        self.boost = 50
         if playerScored:
             self.score += 1
         else:
@@ -284,24 +285,43 @@ class Main(Base):
 
     ########################################################################################
     ########################################################################################
-    # MAIN
+    # OPPONENT AI
     ########################################################################################
     ########################################################################################
 
     def opponentAI(self):
-        # TO FIX
-        # TODO
-        print(f"BEFORE: {self.objects.opponent.global_position}")
         opponent_position = self.objects.opponent.global_position
-        target_position = self.objects.ball.global_position
-        target_position[0] = -0.5
-        target_position[1] = 0
-        # if target_position[0] - opponent_position[0] < 0.1 and target_position[2] - opponent_position[2] < 0.1:
-            # return
-        self.objects.opponent.look_at(target_position)
+        ball_position = self.objects.ball.global_position
+        player_goal_position = [0.5, 0.5, FIELD_LENGTH / 2]
+
+        direction_to_goal = [
+            player_goal_position[0] - ball_position[0],
+            player_goal_position[1] - ball_position[1],
+            player_goal_position[2] - ball_position[2]
+        ]
+
+        magnitude = math.sqrt(direction_to_goal[0]**2 + direction_to_goal[1]**2 + direction_to_goal[2]**2)
+        direction_to_goal = [d / magnitude for d in direction_to_goal]
+
+        desired_ball_velocity = [d * BALL_SPEED for d in direction_to_goal]
+
+        hit_position = [
+            ball_position[0] - direction_to_goal[0],
+            ball_position[1] - direction_to_goal[1],
+            ball_position[2] - direction_to_goal[2]
+        ]
+
+        if abs(opponent_position[0] - hit_position[0]) < 0.2 and abs(opponent_position[2] - hit_position[2]) < 0.2:
+            self.objects.opponent.look_at(ball_position)
+            self.objects.opponent.rotate_y(math.pi * 1.5)
+            self.objects.ball_velocity = desired_ball_velocity
+            return
+
+        hit_position[1] = 0
+        self.objects.opponent.look_at(hit_position)
         self.objects.opponent.rotate_y(math.pi * 1.5)
-        self.objects.opponent.updateOpponent(self.delta_time, JETSKI_SPEED)
-        print(f"AFTER: {self.objects.opponent.global_position}")
+        self.objects.opponent.updateOpponent(self.delta_time, JETSKI_SPEED * OPPONENT_DIFFICULTY, 0.3)
+
 
 
     ########################################################################################
@@ -319,7 +339,7 @@ class Main(Base):
         self.showFPS()
         self.circle_following_ball_ground()
         self.boost_box_logic()
-        if self.fps > 30:
+        if self.fps > 30: # fixes weird bug for some reason
             self.opponentAI()
         self.renderer.hud.update_boost_vertices(self.update_bar_boost())
         self.renderer.render(self.scene, self.camera)

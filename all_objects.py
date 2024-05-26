@@ -70,7 +70,7 @@ class ObjectCreator:
         self.ball = MovementRig()
         self.ball.add(self.meshball)
         self.ball.scale(0.3)
-        self.ball.set_position([0.5, 0.5, -4])
+        self.ball.set_position(BALL_START_POSITION)
         self.example.scene.add(self.ball)
 
         # Load jetski object from OBJ file
@@ -81,7 +81,7 @@ class ObjectCreator:
         self.jetSki = MovementRig()
         self.jetSki.add(self.jetSki_mesh)
         self.jetSki.rotate_y((math.pi) * 1.5)
-        self.jetSki.set_position([0.5, 0.3, 5])  # Adjust position as needed
+        self.jetSki.set_position(PLAYER_START_POSITION)  # Adjust position as needed
         self.example.scene.add(self.jetSki)   
 
         # Load jetski object from OBJ file
@@ -92,7 +92,7 @@ class ObjectCreator:
         self.opponent = MovementRig()
         self.opponent.add(self.opponent_mesh)
         self.opponent.rotate_y((math.pi) / 2 )
-        self.opponent.set_position([0.5, 0.3, -13])  # Adjust position as needed
+        self.opponent.set_position(OPPONENT_START_POSITION)  # Adjust position as needed
         self.example.scene.add(self.opponent)   
 
         # Create and add the circle
