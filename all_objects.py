@@ -1,5 +1,6 @@
 import math
 import random
+import time
 import OpenGL.GL as GL
 
 from constants import *
@@ -18,6 +19,7 @@ class ObjectCreator:
     def __init__(self, example):
         self.example = example
         self.spheres = []
+        self.field_elements = []
         self.create_objects()
         self.create_field()
         self.create_contoured_invisible_walls()
@@ -58,12 +60,12 @@ class ObjectCreator:
 
         sea_geometry = RectangleGeometry(width=1000, height=1000)
         sea_material = TextureMaterial(
-            texture=Texture(file_name="images/sea.jpg"),
-            property_dict={"repeatUV": [50, 50]}
+            texture=Texture(file_name="images/sea2.jpg"),
+            property_dict={"repeatUV": [25, 25]}
         )
-        sand = Mesh(sea_geometry, sea_material)
-        sand.rotate_x(-math.pi / 2)
-        self.example.scene.add(sand)
+        sea = Mesh(sea_geometry, sea_material)
+        sea.rotate_x(-math.pi / 2)
+        self.example.scene.add(sea)
 
         red_geometry = RectangleGeometry(width=1000, height=1000)
         red_material = TextureMaterial(
@@ -127,6 +129,12 @@ class ObjectCreator:
         ball_pos = self.ball.get_position()
         self.circle.set_position([ball_pos[0], 0.1, ball_pos[2]])
 
+    def update_sine_wave_field(self):
+        for field_element in self.field_elements:
+            original_position = field_element.global_position
+            new_y = GROUND + FIELD_JUMP_AMPLITUDE * math.sin(FIELD_JUMP_FREQUENCY * time.time())
+            field_element.set_position([original_position[0], new_y, original_position[2]])
+
     def create_field(self, goal_width=20, goal_depth=10):
 
         # Umbrella setup with increased scale
@@ -151,6 +159,7 @@ class ObjectCreator:
             umbrella.set_position(pos)
             umbrella.scale(umbrella_scale)  # Apply the scaling
             self.example.scene.add(umbrella)
+            self.field_elements.append(umbrella)
 
         # Ring setup with precise placement
         ring_geometry = ObjGeo('models/ring.obj')
@@ -186,6 +195,7 @@ class ObjectCreator:
                     ring.scale(ring_scale)
                     ring.set_position([x_position, 0, z_position])
                     self.example.scene.add(ring)
+                    self.field_elements.append(ring)
 
         # Place rings along the length on both sides of the field, ensuring they do not extend beyond field ends
         for i in range(num_rings_length):
@@ -198,6 +208,7 @@ class ObjectCreator:
                     ring.scale(ring_scale)
                     ring.set_position([x_position, 0, z_position])
                     self.example.scene.add(ring)
+                    self.field_elements.append(ring)
 
         # Goal setup with dynamic dimensions
         goal_geometry = ObjGeo('models/goal.obj')
@@ -226,6 +237,7 @@ class ObjectCreator:
             goal.set_position(pos)
             goal.rotate_y(math.pi if idx == 0 else 0)  # Rotate goals correctly, simplifying rotation
             self.example.scene.add(goal)
+            self.field_elements.append(goal)
 
 
     def create_contoured_invisible_walls(self):

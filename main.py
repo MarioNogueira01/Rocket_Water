@@ -369,6 +369,7 @@ class Main(Base):
             self.rotate_blue_red_labels()
             self.update_sine_wave_spectators()
             self.update_sine_wave_boost_box()
+            self.objects.update_sine_wave_field()
 
         if self.fps > 30: # fixes weird bug for some reason
             self.opponentAI()
@@ -376,6 +377,7 @@ class Main(Base):
         self.renderer.hud.update_boost_vertices(self.update_bar_boost())
         self.renderer.render(self.scene, self.camera)
         self.render_scores(self.score, self.opponent_score)
+
 
 if __name__ == "__main__":
     Main(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()
