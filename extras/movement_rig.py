@@ -37,6 +37,9 @@ class MovementRig(Object3D):
         else:
             move_amount = JETSKI_SPEED * delta_time
 
+        if self.is_jumping:
+            move_amount += AIR_SPEED_BOOST
+
         rotate_amount = self._degrees_per_second * (math.pi / 180) * delta_time
 
         if input_object.is_key_pressed("w"):
