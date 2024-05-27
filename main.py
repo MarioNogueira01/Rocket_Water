@@ -11,6 +11,7 @@ from core_ext.renderer import Renderer
 from core_ext.scene import Scene
 from extras.movement_rig import MovementRig
 from all_objects import ObjectCreator
+from main_menu import MainMenu
 
 class Main(Base):
     def initialize(self):
@@ -383,6 +384,21 @@ class Main(Base):
         self.renderer.render(self.scene, self.camera)
         self.render_scores(self.score, self.opponent_score)
 
+        if self.input.is_key_down("escape"):
+            self.quit_to_main_menu()
+
+    def quit_to_main_menu(self):
+        pygame.display.quit()
+        pygame.display.init()
+        pygame.freetype.init()
+        menu = MainMenu()
+        menu.run()
+
+
+
+def run_game():
+    Main(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()
 
 if __name__ == "__main__":
-    Main(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()
+    run_game()
+
