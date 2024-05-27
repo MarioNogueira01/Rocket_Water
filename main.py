@@ -20,6 +20,10 @@ class Main(Base):
     def initialize(self):
         pygame.init()
         pygame.freetype.init()
+        pygame.mixer.init()
+        pygame.mixer.music.load("music.mp3")
+        pygame.mixer.music.set_volume(0.05)
+        pygame.mixer.music.play(-1)
         self.font = pygame.freetype.Font("game_font.otf", 24)
         self.renderer = Renderer()
         self.scene = Scene()
