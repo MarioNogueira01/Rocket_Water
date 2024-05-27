@@ -1,6 +1,5 @@
 LOW_SPEC = False
 
-
 CAMERA_OFFSET_Y = 2
 CAMERA_FOLLOW_OFFSET_Y = 2
 CAMERA_OFFSET_DISTANCE = 5
@@ -39,7 +38,12 @@ DIFFICULTY_LEVELS = {
     "hard": 1.5
 }
 
-OPPONENT_DIFFICULTY = DIFFICULTY_LEVELS["easy"]
+GRAPHICS_SETTINGS = {
+    "low graphics": True,
+    "high graphics": False,
+}
+
+OPPONENT_DIFFICULTY = DIFFICULTY_LEVELS["medium"]
 
 GROUND = 0.4
 BALL_GROUND = 0.5

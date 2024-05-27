@@ -409,7 +409,7 @@ class Main(Base):
             self.update_sine_wave_boost_box()
             self.objects.update_sine_wave_field()
 
-        if self.fps > 30: # fixes weird bug for some reason
+        if self.fps > 25: # fixes weird bug for some reason
             self.opponentAI()
 
         self.renderer.hud.update_boost_vertices(self.update_bar_boost())
@@ -426,10 +426,9 @@ class Main(Base):
         menu = MainMenu()
         menu.run()
 
-
-
 def run_game():
     Main(screen_size=[SCREEN_WIDTH, SCREEN_HEIGHT]).run()
+
 
 if __name__ == "__main__":
     run_game()

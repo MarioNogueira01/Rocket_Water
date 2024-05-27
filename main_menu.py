@@ -55,9 +55,14 @@ class MainMenu:
         default_color = "Black"
         
         difficulty_buttons = {
-            "easy": Button(image=None, pos=(320, 500), text_input="EASY", font=get_font(45), base_color=default_color, hovering_color="Green"),
-            "medium": Button(image=None, pos=(640, 500), text_input="MEDIUM", font=get_font(45), base_color=default_color, hovering_color="Green"),
-            "hard": Button(image=None, pos=(960, 500), text_input="HARD", font=get_font(45), base_color=default_color, hovering_color="Green")
+            "easy": Button(image=None, pos=(520, 500), text_input="EASY", font=get_font(45), base_color=default_color, hovering_color="Green"),
+            "medium": Button(image=None, pos=(840, 500), text_input="MEDIUM", font=get_font(45), base_color=default_color, hovering_color="Green"),
+            "hard": Button(image=None, pos=(1160, 500), text_input="HARD", font=get_font(45), base_color=default_color, hovering_color="Green")
+        }
+
+        graphics_buttons = {
+            "low graphics": Button(image=None, pos=(700, 400), text_input="LOW", font=get_font(45), base_color=default_color, hovering_color="Green"),
+            "high graphics": Button(image=None, pos=(1000, 400), text_input="HIGH", font=get_font(45), base_color=default_color, hovering_color="Green"),
         }
         
         def update_button_colors():
@@ -66,8 +71,16 @@ class MainMenu:
                     button.base_color = selected_color
                 else:
                     button.base_color = default_color
+
+        def update_button_colors_Graphics():
+            for level, button in graphics_buttons.items():
+                if constants.LOW_SPEC == constants.GRAPHICS_SETTINGS[level]:
+                    button.base_color = selected_color
+                else:
+                    button.base_color = default_color
         
         update_button_colors()
+        update_button_colors_Graphics()
         
         while True:
             options_mouse_pos = pygame.mouse.get_pos()
@@ -81,9 +94,18 @@ class MainMenu:
                 "ESC to Menu"
             ]
 
+            options_text = get_font(45).render("SETTINGS:", True, "Black")
+            options_rect = options_text.get_rect(center=(300, 400))
+            self.screen.blit(options_text, options_rect)
+
+            options_text = get_font(45).render("BOT AI:", True, "Black")
+            options_rect = options_text.get_rect(center=(250, 500))
+            self.screen.blit(options_text, options_rect)
+
+
             for i, line in enumerate(controls_text):
                 options_text = get_font(45).render(line, True, "Black")
-                options_rect = options_text.get_rect(center=(640, 200 + i * 50))
+                options_rect = options_text.get_rect(center=(640, 50 + i * 50))
                 self.screen.blit(options_text, options_rect)
 
             options_back = Button(image=None, pos=(640, 600), text_input="BACK", font=get_font(75),
@@ -92,6 +114,10 @@ class MainMenu:
             options_back.update(self.screen)
 
             for level, button in difficulty_buttons.items():
+                button.changeColor(options_mouse_pos)
+                button.update(self.screen)
+
+            for level, button in graphics_buttons.items():
                 button.changeColor(options_mouse_pos)
                 button.update(self.screen)
 
@@ -106,6 +132,10 @@ class MainMenu:
                         if button.checkForInput(options_mouse_pos):
                             constants.OPPONENT_DIFFICULTY = constants.DIFFICULTY_LEVELS[level]
                             update_button_colors()
+                    for level, button in graphics_buttons.items():
+                        if button.checkForInput(options_mouse_pos):
+                            constants.LOW_SPEC = constants.GRAPHICS_SETTINGS[level]
+                            update_button_colors_Graphics()
 
             pygame.display.update()
 
