@@ -15,8 +15,35 @@ from material.texture import TextureMaterial
 from extras.movement_rig import MovementRig
 
 
+# Add the vertex_shader_code and fragment_shader_code here
+
 class ObjectCreator:
     def __init__(self, example):
+        self.vertex_shader_code = """
+        uniform mat4 projectionMatrix;
+        uniform mat4 viewMatrix;
+        uniform mat4 modelMatrix;
+        in vec3 vertexPosition;
+        out vec3 color;
+        void main()
+        {
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition, 1.0);
+            color = vec3(1.0, 1.0, 1.0); // default white color, this will be multiplied by baseColor in fragment shader
+        }
+        """
+
+        self.fragment_shader_code = """
+        uniform vec3 baseColor;
+        in vec3 color;
+        out vec4 fragColor;
+        void main()
+        {
+            fragColor = vec4(color * baseColor, 1.0);
+        }
+        """
+        self.white_material = Material(self.vertex_shader_code, self.fragment_shader_code)
+        self.white_material.add_uniform("vec3", "baseColor", [1.0, 1.0, 1.0])  # White color
+        self.white_material.locate_uniforms()
         self.example = example
         self.spheres = []
         self.field_elements = []
@@ -25,15 +52,15 @@ class ObjectCreator:
         self.create_contoured_invisible_walls()
         self.create_hitboxGoals()
         if not LOW_SPEC:
-            self.create_field_spheres(offset = 1)
-            self.create_field_spheres(offset = 3)
+            self.create_field_spheres(spacing = 7, offset = 1)
+            self.create_field_spheres(spacing = 12, offset = 3)
         self.ball_velocity = [0, 0, 0]  # Initialize ball velocity
         self.boost_boxes = []  # List to store boost boxes
 
 
     def create_boost_box(self):
         box_geometry = ObjGeo('models/boost.obj')
-        box_material = TextureMaterial(texture=Texture(file_name="images/boost.png"))
+        box_material = TextureMaterial(texture=Texture(file_name="images/boost0.jpg"))
         boost_box_mesh = Mesh(box_geometry, box_material)
         boost_box_rig = MovementRig()  # Using a MovementRig or similar object to handle transformations
         boost_box_rig.add(boost_box_mesh)
@@ -118,7 +145,7 @@ class ObjectCreator:
 
         # Create and add the circle
         circle_geometry = CircleGeometry(inner_radius=0.4, outer_radius=0.6, segments=64)
-        circle_material = TextureMaterial(texture=Texture(file_name="images/branco.jpg"))  # Use an appropriate texture
+        circle_material = self.white_material  # Use white color material
         self.circle = Mesh(circle_geometry, circle_material)
         self.example.scene.add(self.circle)
         
@@ -163,7 +190,7 @@ class ObjectCreator:
 
         # Ring setup with precise placement
         ring_geometry = ObjGeo('models/ring.obj')
-        ring_texture = Texture(file_name="images/ring.png")
+        ring_texture = Texture(file_name="images/ring0.jpg")
         ring_material = TextureMaterial(texture=ring_texture)
         ring_scale = 0.05  # Smaller scale for rings
 
@@ -203,17 +230,14 @@ class ObjectCreator:
             if -FIELD_LENGTH / 2 < z_position < FIELD_LENGTH / 2:  # Ensure rings do not extend beyond field ends
                 for x_position in [-FIELD_WIDTH / 2, FIELD_WIDTH / 2]:
                     ring_mesh = Mesh(ring_geometry, ring_material)
-                    ring = MovementRig()
-                    ring.add(ring_mesh)
-                    ring.scale(ring_scale)
-                    ring.set_position([x_position, 0, z_position])
-                    self.example.scene.add(ring)
-                    self.field_elements.append(ring)
+                    ring_mesh.scale(ring_scale)
+                    ring_mesh.set_position([x_position, 0, z_position])
+                    self.example.scene.add(ring_mesh)
+                    self.field_elements.append(ring_mesh)
 
         # Goal setup with dynamic dimensions
         goal_geometry = ObjGeo('models/goal.obj')
-        goal_texture = Texture(file_name="images/branco.jpg")
-        goal_material = TextureMaterial(texture=goal_texture)
+        goal_material = self.white_material  # Use white color material
 
         # Assumptions about original model dimensions (update these if you know the exact dimensions)
         original_model_width = 1  # Original model width
@@ -231,13 +255,11 @@ class ObjectCreator:
 
         for idx, pos in enumerate(goal_positions):
             goal_mesh = Mesh(goal_geometry, goal_material)
-            goal = MovementRig()
-            goal.add(goal_mesh)
-            goal.scale(goal_scale_x, 10, goal_scale_z)  # Apply non-uniform scaling
-            goal.set_position(pos)
-            goal.rotate_y(math.pi if idx == 0 else 0)  # Rotate goals correctly, simplifying rotation
-            self.example.scene.add(goal)
-            self.field_elements.append(goal)
+            goal_mesh.scale(goal_scale_x, 10, goal_scale_z)  # Apply non-uniform scaling
+            goal_mesh.set_position(pos)
+            goal_mesh.rotate_y(math.pi if idx == 0 else 0)  # Rotate goals correctly, simplifying rotation
+            self.example.scene.add(goal_mesh)
+            self.field_elements.append(goal_mesh)
 
 
     def create_contoured_invisible_walls(self):
@@ -246,7 +268,7 @@ class ObjectCreator:
         scale_factor = 20.0  # Fator de escala para "diminuir" a imagem e repetir a textura
 
         # Criando o material para as paredes com a textura repetida
-        wall_texture = Texture(file_name="images/field_wall.png", property_dict={"wrap": GL.GL_REPEAT}, scale_factor=scale_factor)
+        wall_texture = Texture(file_name="images/field_wall0.png", property_dict={"wrap": GL.GL_REPEAT}, scale_factor=scale_factor)
         wall_material = TextureMaterial(texture=wall_texture)
         wall_material.visible = True
 
@@ -290,7 +312,7 @@ class ObjectCreator:
         wall_thickness = 5
         scale_factor = 20.0
 
-        hitBoxes_texture = Texture(file_name="images/field_wall.png", property_dict={"wrap": GL.GL_REPEAT}, scale_factor=scale_factor)
+        hitBoxes_texture = Texture(file_name="images/field_wall0.png", property_dict={"wrap": GL.GL_REPEAT}, scale_factor=scale_factor)
         hitBoxes_material = TextureMaterial(texture=hitBoxes_texture)
         hitBoxes_material.visible = True
 
@@ -328,54 +350,42 @@ class ObjectCreator:
         width_segments = int(FIELD_WIDTH / spacing)
         length_segments = int(FIELD_LENGTH / spacing)
 
+    # Place spheres along the width
         for i in range(width_segments + 1):
             x_position = -FIELD_WIDTH / 2 + i * spacing
             for z_position in [-FIELD_LENGTH / 2, FIELD_LENGTH / 2]:
                 random_color = [random.random(), random.random(), random.random()]
-                sphere_material = Material(vertex_shader_code, fragment_shader_code)
+                sphere_material = Material(self.vertex_shader_code, self.fragment_shader_code)
                 sphere_material.add_uniform("vec3", "baseColor", random_color)
                 sphere_material.locate_uniforms()
                 sphere_mesh = Mesh(sphere_geometry, sphere_material)
                 sphere_rig = MovementRig()
                 sphere_rig.add(sphere_mesh)
-                sphere_rig.set_position([x_position + offset if x_position > 0 else x_position - offset, sphere_radius, z_position + offset if z_position > 0 else z_position - offset])
+                # Adjust offset based on the position to avoid overlap
+                sphere_rig.set_position([
+                    x_position + (offset if x_position > 0 else -offset), 
+                    1, 
+                    z_position + (offset if z_position > 0 else -offset)
+                ])
                 self.example.scene.add(sphere_rig)
-                self.spheres.append((sphere_rig, random.uniform(0.5, 2.0)))  # Add sphere rig with a random frequency
-        
+                self.spheres.append((sphere_rig, random.uniform(0.5, 2.0)))
+
+    # Place spheres along the length
         for i in range(length_segments + 1):
             z_position = -FIELD_LENGTH / 2 + i * spacing
             for x_position in [-FIELD_WIDTH / 2, FIELD_WIDTH / 2]:
                 random_color = [random.random(), random.random(), random.random()]
-                sphere_material = Material(vertex_shader_code, fragment_shader_code)
+                sphere_material = Material(self.vertex_shader_code, self.fragment_shader_code)
                 sphere_material.add_uniform("vec3", "baseColor", random_color)
                 sphere_material.locate_uniforms()
                 sphere_mesh = Mesh(sphere_geometry, sphere_material)
                 sphere_rig = MovementRig()
                 sphere_rig.add(sphere_mesh)
-                sphere_rig.set_position([x_position + offset if x_position > 0 else x_position - offset, sphere_radius, z_position + offset if z_position > 0 else z_position - offset])
+                # Adjust offset based on the position to avoid overlap
+                sphere_rig.set_position([
+                    x_position + (offset if x_position > 0 else -offset), 
+                    sphere_radius, 
+                    z_position + (offset if z_position > 0 else -offset)
+                ])
                 self.example.scene.add(sphere_rig)
-                self.spheres.append((sphere_rig, random.uniform(0.5, 2.0)))  # Add sphere rig with a random frequency
-
-# Add the vertex_shader_code and fragment_shader_code here
-vertex_shader_code = """
-uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 modelMatrix;
-in vec3 vertexPosition;
-out vec3 color;
-void main()
-{
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition, 1.0);
-    color = vec3(1.0, 1.0, 1.0); // default white color, this will be multiplied by baseColor in fragment shader
-}
-"""
-
-fragment_shader_code = """
-uniform vec3 baseColor;
-in vec3 color;
-out vec4 fragColor;
-void main()
-{
-    fragColor = vec4(color * baseColor, 1.0);
-}
-"""
+                self.spheres.append((sphere_rig, random.uniform(0.5, 2.0)))

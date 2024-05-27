@@ -3,6 +3,7 @@ import math
 import pygame
 import OpenGL.GL as GL
 from pygame import freetype
+from boost_particles import ParticleSystem
 from constants import *
 from core.base import Base
 from core_ext.camera import Camera
@@ -33,6 +34,12 @@ class Main(Base):
         self.boostsCounter = 0
         self.score = 0
         self.opponent_score = 0
+        self.boost_camera = 0
+
+        if not LOW_SPEC:
+            self.particle_system = ParticleSystem()
+            self.scene.add(self.particle_system)
+
 
     ########################################################################################
     ########################################################################################
@@ -45,10 +52,10 @@ class Main(Base):
             self.camera_follow_mode = not self.camera_follow_mode
 
         if self.camera_follow_mode:
-            self.camera_rig.follow_target(self.objects.jetSki, offset=[CAMERA_OFFSET_DISTANCE, CAMERA_OFFSET_Y, 0])
+            self.camera_rig.follow_target(self.objects.jetSki, offset=[CAMERA_OFFSET_DISTANCE + self.boost_camera, CAMERA_OFFSET_Y, 0])
         else:
             self.camera_rig.follow_target_look_at(self.objects.jetSki, self.objects.ball, CAMERA_FOLLOW_OFFSET_Y,
-                                                  CAMERA_OFFSET_DISTANCE)
+                                                  CAMERA_OFFSET_DISTANCE + self.boost_camera )
 
     ########################################################################################
     ########################################################################################
@@ -99,23 +106,18 @@ class Main(Base):
         ball_pos = self.objects.ball.global_position
         next_ball_pos = [ball_pos[i] + self.objects.ball.velocity[i] * self.delta_time for i in range(3)]
 
-        # Flags to indicate collision with walls
         collided_with_horizontal_wall = False
         collided_with_vertical_wall = False
 
-        # Check collision with each wall
         for wall in self.objects.walls:
             (min_x, max_x), (min_z, max_z) = wall.bounds
 
-            # Check collision with horizontal walls (top and bottom)
             if wall in self.objects.walls[:2]:
                 if min_x * 2 <= next_ball_pos[0] <= max_x * 2:
                     if next_ball_pos[2] < min_z or next_ball_pos[2] > max_z:
                         self.objects.ball_velocity[2] = -self.objects.ball_velocity[2]  # Invert Z velocity
                         collided_with_horizontal_wall = True
                         break
-
-            # Check collision with vertical walls (left and right)
             else:
                 if min_z * 2 <= next_ball_pos[2] <= max_z * 2:
                     if next_ball_pos[0] < min_x or next_ball_pos[0] > max_x:
@@ -156,6 +158,8 @@ class Main(Base):
         if self.input.is_key_pressed("k") and self.boost > 0:
             self.boost -= BOOST_COST
             self.objects.jetSki.updateJetSki(self.input, self.delta_time, True)
+            if not LOW_SPEC:
+                self.particle_system.emit(self.objects.jetSki.get_position())
         else:
             self.objects.jetSki.updateJetSki(self.input, self.delta_time, False)
 
@@ -331,7 +335,7 @@ class Main(Base):
     def update_sine_wave_spectators(self):
         for sphere_rig, frequency in self.objects.spheres:
             original_position = sphere_rig.global_position
-            new_y = GROUND + SPECTATORS_JUMP_AMPLITUDE * math.sin(frequency * time.time())
+            new_y = GROUND + 0.2 + SPECTATORS_JUMP_AMPLITUDE * math.sin(frequency * time.time())
             sphere_rig.set_position([original_position[0], new_y, original_position[2]])
 
     ########################################################################################
@@ -366,6 +370,7 @@ class Main(Base):
         self.boost_box_logic()
 
         if not LOW_SPEC:
+            self.particle_system.update(self.delta_time)
             self.rotate_blue_red_labels()
             self.update_sine_wave_spectators()
             self.update_sine_wave_boost_box()
