@@ -1,4 +1,4 @@
-from py3d.core_ext.object3d import Object3D
+from core_ext.object3d import Object3D
 
 
 class Group(Object3D):

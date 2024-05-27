@@ -19,8 +19,7 @@ class Base:
         # Create and display the window
         self._screen = pygame.display.set_mode(screen_size, display_flags)
         # Set the text that appears in the title bar of the window
-        pygame.display.set_caption("Rocket League")
-        pygame.display.toggle_fullscreen
+        pygame.display.set_caption("Graphics Window")
         # Determine if main loop is active
         self._running = True
         # Manage time-related data and operations

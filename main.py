@@ -11,6 +11,9 @@ from core_ext.renderer import Renderer
 from core_ext.scene import Scene
 from extras.movement_rig import MovementRig
 from all_objects import ObjectCreator
+from light.ambient import AmbientLight
+from light.directional import DirectionalLight
+from light.point import PointLight
 from main_menu import MainMenu
 
 class Main(Base):
@@ -36,6 +39,10 @@ class Main(Base):
         self.score = 0
         self.opponent_score = 0
         self.boost_camera = 0
+        ambient_light = AmbientLight(color=[0.65, 0.65, 0.65])
+        self.scene.add(ambient_light)
+        self.directional_light = DirectionalLight(color=[0.8, 0.8, 0.8], direction=[-1, -1, 0])
+        self.scene.add(self.directional_light)
 
         if not LOW_SPEC:
             self.particle_system = ParticleSystem()
@@ -89,7 +96,7 @@ class Main(Base):
 
         if ball_pos[1] > BALL_GROUND:
             self.objects.ball_velocity[1] += BALL_GRAVITY * self.delta_time
-        if self.objects.ball_velocity[1] < 0 and ball_pos[1] <= BALL_GROUND + 0.1:
+        if self.objects.ball_velocity[1] < 0 and ball_pos[1] <= BALL_GROUND:
             self.objects.ball.set_position([ball_pos[0], BALL_GROUND, ball_pos[2]])
             self.objects.ball_velocity[1] = -self.objects.ball_velocity[1] * BALL_BOUNCE
 
@@ -248,13 +255,13 @@ class Main(Base):
 
     def check_boost_box_collision(self):
         jetski_pos = self.objects.jetSki.global_position
-        for boost_box_rig, _ in self.objects.boost_boxes:  # Extract the rig from the tuple
+        for boost_box_rig, circle_rig, _ in self.objects.boost_boxes:  # Extract the rig from the tuple
             box_pos = boost_box_rig.global_position
             distance = math.sqrt((jetski_pos[0] - box_pos[0]) ** 2 + (jetski_pos[2] - box_pos[2]) ** 2)
             if distance < HITBOX_BUFFER:
                 self.boost += BOOST_AMOUNT
                 self.boost = min(self.boost, MAX_BOOST)
-                self.objects.remove_box(boost_box_rig)  # Pass the rig to remove_box
+                self.objects.remove_box(boost_box_rig,circle_rig)  # Pass the rig to remove_box
                 break
 
     ########################################################################################
@@ -300,6 +307,7 @@ class Main(Base):
 
     def opponentAI(self):
         ball_position = self.objects.ball.global_position
+        opponent_position = self.objects.opponent.global_position
         player_goal_position = [0.5, 0.5, FIELD_LENGTH / 2]
 
         direction_to_goal = [
@@ -320,6 +328,26 @@ class Main(Base):
         self.objects.opponent.look_at(hit_position)
         self.objects.opponent.rotate_y(math.pi * 1.5)
         self.objects.opponent.updateOpponent(self.delta_time, JETSKI_SPEED * OPPONENT_DIFFICULTY, GROUND)
+
+        # Check if the opponent is close enough to the ball to hit it
+        distance_to_ball = math.sqrt(
+            (opponent_position[0] - ball_position[0]) ** 2 +
+            (opponent_position[1] - ball_position[1]) ** 2 +
+            (opponent_position[2] - ball_position[2]) ** 2
+        )
+
+        if distance_to_ball < HITBOX_BUFFER:
+            # Calculate the direction to apply to the ball
+            direction = [
+                ball_position[0] - opponent_position[0],
+                ball_position[1] - opponent_position[1],
+                ball_position[2] - opponent_position[2]
+            ]
+            magnitude = math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2)
+            if magnitude != 0:
+                direction = [d / magnitude for d in direction]
+
+            self.objects.ball_velocity = [d * BALL_SPEED for d in direction]
 
 
     def rotate_blue_red_labels(self):
@@ -346,7 +374,7 @@ class Main(Base):
     ########################################################################################
 
     def update_sine_wave_boost_box(self):
-        for boost_box_rig, frequency in self.objects.boost_boxes:
+        for boost_box_rig, _, frequency in self.objects.boost_boxes:
             original_position = boost_box_rig.global_position
             new_y = BOOST_GROUND + BOOST_JUMP_AMPLITUDE * math.sin(frequency * time.time())
             boost_box_rig.set_position([original_position[0], new_y, original_position[2]])

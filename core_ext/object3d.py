@@ -1,3 +1,4 @@
+import numpy as np
 from core.matrix import Matrix
 
 
@@ -57,6 +58,10 @@ class Object3D:
     def local_matrix(self):
         return self._matrix
 
+    @local_matrix.setter
+    def local_matrix(self, matrix):
+        self._matrix = matrix
+
     @property
     def local_position(self):
         """
@@ -75,6 +80,23 @@ class Object3D:
     @parent.setter
     def parent(self, parent):
         self._parent = parent
+
+    @property
+    def rotation_matrix(self):
+        """
+        Returns 3x3 submatrix with rotation data.
+        3x3 top-left submatrix contains only rotation data.
+        """
+        return np.array(
+            [self._matrix[0][0:3],
+             self._matrix[1][0:3],
+             self._matrix[2][0:3]]
+        ).astype(float)
+
+    @property
+    def direction(self):
+        forward = np.array([0, 0, -1]).astype(float)
+        return list(self.rotation_matrix @ forward)
 
     def add(self, child):
         self._children_list.append(child)
@@ -105,22 +127,6 @@ class Object3D:
         m = Matrix.make_rotation_y(angle)
         self.apply_matrix(m, local)
 
-    def rotate_y_point(self, angle, x, y, z, local=True):
-        m = Matrix.make_rotation_y_around_point(angle, x, y, z)
-        self.apply_matrix(m, local)
-
-    def set_rotate_y(self, angle, local=True):
-        # Extract translation components from the matrix
-        translation = self._matrix[:, 3].copy()
-        # Create rotation matrix
-        rotation_matrix = Matrix.make_rotation_y(angle)
-        # Set the translation components back
-        if local:
-            self._matrix = rotation_matrix
-        else:
-            self._matrix[:3, :3] = rotation_matrix[:3, :3]
-        self._matrix[:, 3] = translation
-
     def rotate_z(self, angle, local=True):
         m = Matrix.make_rotation_z(angle)
         self.apply_matrix(m, local)
@@ -137,6 +143,32 @@ class Object3D:
 
     def look_at(self, target_position):
         self._matrix = Matrix.make_look_at(self.global_position, target_position)
+
+    def set_direction(self, direction):
+        position = self.local_position
+        target_position = [
+            position[0] + direction[0],
+            position[1] + direction[1],
+            position[2] + direction[2]
+        ]
+        self.look_at(target_position)
+
+    def rotate_y_point(self, angle, x, y, z, local=True):
+        m = Matrix.make_rotation_y_around_point(angle, x, y, z)
+        self.apply_matrix(m, local)
+
+    def set_rotate_y(self, angle, local=True):
+        # Extract translation components from the matrix
+        translation = self._matrix[:, 3].copy()
+        # Create rotation matrix
+        rotation_matrix = Matrix.make_rotation_y(angle)
+        # Set the translation components back
+        if local:
+            self._matrix = rotation_matrix
+        else:
+            self._matrix[:3, :3] = rotation_matrix[:3, :3]
+        self._matrix[:, 3] = translation
+
 
     def scale(self, sx, sy=None, sz=None, local=True):
         if sy is None or sz is None:

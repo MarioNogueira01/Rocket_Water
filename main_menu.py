@@ -4,7 +4,6 @@ from button import Button
 import main 
 import constants
 
-
 def get_font(size):
     return pygame.font.Font("assets/font.ttf", size)
 

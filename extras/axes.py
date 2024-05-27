@@ -4,7 +4,7 @@ from material.line import LineMaterial
 
 
 class AxesHelper(Mesh):
-    def __init__(self, axis_length=1, line_width=4, axis_colors=[[1, 0, 0],[0, 1, 0],[0, 0, 1]]):
+    def __init__(self, axis_length=1, line_width=4, axis_colors=([1, 0, 0], [0, 1, 0], [0, 0, 1])):
         geomerty = Geometry()
         position_data = [[0, 0, 0], [axis_length, 0, 0],
                          [0, 0, 0], [0, axis_length, 0],
@@ -14,7 +14,6 @@ class AxesHelper(Mesh):
                       axis_colors[2], axis_colors[2]]
         geomerty.add_attribute("vec3", "vertexPosition", position_data)
         geomerty.add_attribute("vec3", "vertexColor", color_data)
-        geomerty.count_vertices()
         material = LineMaterial(
             property_dict = {
                 "useVertexColors": True,

@@ -1,6 +1,4 @@
 import numpy
-
-import numpy as np
 from numpy import subtract, divide, cross
 from numpy.linalg import norm
 from math import sin, cos, tan, pi
@@ -115,7 +113,7 @@ class Matrix:
         # Fix this by perturbing the world_up vector a bit
         if norm(right) < 0.001:
             offset = numpy.array([0.001, 0, 0])
-            right = cross(forward, world_up + offset)
+            right = numpy.cross(forward, world_up + offset)
         up = cross(right, forward)
         # All vectors should have length 1
         forward = divide(forward, norm(forward))

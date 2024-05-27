@@ -6,19 +6,12 @@ from geometry.sphere import SphereGeometry
 from material.material import Material
 
 class Particle(Object3D):
-    def __init__(self, position, velocity, lifespan, scale=0.05):
+    def __init__(self, position, velocity, lifespan, geo, mat):
         super().__init__()
         self.velocity = velocity
         self.lifespan = lifespan
-        self.age = 0
-        self.geometry = SphereGeometry(radius=scale, radius_segments=4, height_segments=4)
-        
-        # Create a material with a simple red color
-        self.material = Material(vertex_shader_code, fragment_shader_code)
-        self.material.add_uniform("vec3", "baseColor", [0, 0, 0.6])  # Red color
-        self.material.locate_uniforms()
-        
-        self.mesh = Mesh(self.geometry, self.material)
+        self.age = 0        
+        self.mesh = Mesh(geo, mat)
         self.add(self.mesh)
         position[1] -= 0.2
         self.set_position(position)
@@ -34,11 +27,15 @@ class ParticleSystem(Object3D):
         super().__init__()
         self.max_particles = MAX_BOOST_PARTICLES
         self.particles = []
+        self.geometry = SphereGeometry(radius=0.05, radius_segments=4, height_segments=4)
+        self.material = Material(vertex_shader_code, fragment_shader_code)
+        self.material.add_uniform("vec3", "baseColor", [0, 0, 0.6])  # Red color
+        self.material.locate_uniforms()
 
     def create_particle(self, position):
         velocity = [random.uniform(-0.5, 0), random.uniform(0, 0.5), random.uniform(-0.5, 0)]
         lifespan = random.uniform(1, 3)
-        particle = Particle(position, velocity, lifespan,scale=(random.uniform(0.03, 0.07)))
+        particle = Particle(position, velocity, lifespan,geo = self.geometry, mat = self.material)
         self.particles.append(particle)
         self.add(particle)
 

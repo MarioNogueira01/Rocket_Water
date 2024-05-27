@@ -3,7 +3,7 @@ import pygame
 
 
 class Texture:
-    def __init__(self, file_name=None, property_dict={}, scale_factor=1.0):
+    def __init__(self, file_name=None, property_dict={}):
         # Pygame object for storing pixel data;
         # can load from image or manipulate directly
         self._surface = None
@@ -19,7 +19,15 @@ class Texture:
         self.set_properties(property_dict)
         if file_name is not None:
             self.load_image(file_name)
-            self.upload_data(scale_factor)
+            self.upload_data()
+
+    @property
+    def surface(self):
+        return self._surface
+
+    @surface.setter
+    def surface(self, surface):
+        self._surface = surface
 
     @property
     def texture_ref(self):
@@ -31,13 +39,14 @@ class Texture:
 
     def set_properties(self, property_dict):
         """ Set property values """
-        for name, value in property_dict.items():
-            if name in self._property_dict.keys():
-                self._property_dict[name] = value
-            else:  # unknown property type
-                raise Exception("Texture has no property with name: " + name)
+        if property_dict:
+            for name, value in property_dict.items():
+                if name in self._property_dict.keys():
+                    self._property_dict[name] = value
+                else:  # unknown property type
+                    raise Exception("Texture has no property with name: " + name)
 
-    def upload_data(self, scale_factor):
+    def upload_data(self):
         """ Upload pixel data to GPU """
         # Store image dimensions
         width = self._surface.get_width()
@@ -58,9 +67,3 @@ class Texture:
         GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, self._property_dict["wrap"])
         # Set default border color to white; important for rendering shadows
         GL.glTexParameterfv(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_BORDER_COLOR, [1, 1, 1, 1])
-
-        # Adjust texture coordinates based on scale factor
-        GL.glMatrixMode(GL.GL_TEXTURE)
-        GL.glLoadIdentity()
-        GL.glScalef(scale_factor, scale_factor, 1.0)
-        GL.glMatrixMode(GL.GL_MODELVIEW)

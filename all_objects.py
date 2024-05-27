@@ -7,10 +7,13 @@ from constants import *
 from core_ext.mesh import Mesh
 from core_ext.texture import Texture
 from geometry.circleGeometry import CircleGeometry
+from geometry.ellipsoid import EllipsoidGeometry
 from geometry.objGeo import ObjGeo
 from geometry.rectangle import RectangleGeometry
 from geometry.sphere import SphereGeometry
+from material.lambert import LambertMaterial
 from material.material import Material
+from material.phong import PhongMaterial
 from material.texture import TextureMaterial
 from extras.movement_rig import MovementRig
 
@@ -38,11 +41,11 @@ class ObjectCreator:
         out vec4 fragColor;
         void main()
         {
-            fragColor = vec4(color * baseColor, 1.0);
+            fragColor = vec4(color * baseColor, 0.8);
         }
         """
         self.white_material = Material(self.vertex_shader_code, self.fragment_shader_code)
-        self.white_material.add_uniform("vec3", "baseColor", [1.0, 1.0, 1.0])  # White color
+        self.white_material.add_uniform("vec3", "baseColor", [0.3, 0.3, 0.3])  # White color
         self.white_material.locate_uniforms()
         self.example = example
         self.spheres = []
@@ -56,28 +59,39 @@ class ObjectCreator:
             self.create_field_spheres(spacing = 12, offset = 3)
         self.ball_velocity = [0, 0, 0]  # Initialize ball velocity
         self.boost_boxes = []  # List to store boost boxes
+        self.box_geometry = ObjGeo('models/boost.obj')
+        self.box_material = LambertMaterial(
+            texture_path = "images/boost0.jpg"
+        )
+        self.circle_geometry = EllipsoidGeometry(width=0.3, height=0.01, depth=0.3, radius_segments=16, height_segments=2)
+        self.boost_circle_geometry = EllipsoidGeometry(width=0.7, height=0.01, depth=0.7, radius_segments=16, height_segments=2)
+        self.circle_material = self.white_material  # Use white color material
 
 
     def create_boost_box(self):
-        box_geometry = ObjGeo('models/boost.obj')
-        box_material = TextureMaterial(texture=Texture(file_name="images/boost0.jpg"))
-        boost_box_mesh = Mesh(box_geometry, box_material)
-        boost_box_rig = MovementRig()  # Using a MovementRig or similar object to handle transformations
+        boost_box_mesh = Mesh(self.box_geometry, self.box_material)
+        boost_box_rig = MovementRig()
         boost_box_rig.add(boost_box_mesh)
 
+        boost_circle = Mesh(self.boost_circle_geometry, self.circle_material)
+        boost_circle_rig = MovementRig()
+        boost_circle_rig.add(boost_circle)
+        
         # Set the position and scale using the rig
         random_x = random.uniform(-FIELD_WIDTH / 2 + FIELD_WIDTH_OFFSET, FIELD_WIDTH / 2 - FIELD_WIDTH_OFFSET)
         random_z = random.uniform(-FIELD_LENGTH / 2 + FIELD_LENGTH_OFFSET, FIELD_LENGTH / 2 - FIELD_LENGTH_OFFSET)
         boost_box_rig.set_position([random_x, 0.8, random_z])
+        boost_circle_rig.set_position([random_x, 0.1, random_z])
         boost_box_rig.scale(0.015)  # Adjust this value to scale the boost box appropriately
 
-        self.boost_boxes.append((boost_box_rig, random.uniform(0.5, 2.0)))  # Add boost box rig with a random frequency
+        self.boost_boxes.append((boost_box_rig, boost_circle_rig, random.uniform(0.5, 2.0)))  # Add boost box rig with a random frequency
         self.example.scene.add(boost_box_rig)
+        self.example.scene.add(boost_circle_rig)
 
-
-    def remove_box(self, box_rig):
+    def remove_box(self, box_rig, boost_circle_rig):
         self.boost_boxes = [box for box in self.boost_boxes if box[0] != box_rig]
         self.example.scene.remove(box_rig)
+        self.example.scene.remove(boost_circle_rig)
 
     def create_objects(self):
         sky_geometry = SphereGeometry(radius=200)
@@ -85,11 +99,16 @@ class ObjectCreator:
         sky = Mesh(sky_geometry, sky_material)
         self.example.scene.add(sky)
 
-        sea_geometry = RectangleGeometry(width=1000, height=1000)
-        sea_material = TextureMaterial(
-            texture=Texture(file_name="images/sea2.jpg"),
-            property_dict={"repeatUV": [25, 25]}
-        )
+        sea_geometry = RectangleGeometry(width=500, height=500)
+        if not LOW_SPEC:
+            sea_material = TextureMaterial(
+                texture=Texture(file_name="images/sea2.jpg"),
+                property_dict={"repeatUV": [25, 25]}
+            )
+        else:
+            sea_material = LambertMaterial(
+                texture_path = "images/sea2.jpg"
+            )
         sea = Mesh(sea_geometry, sea_material)
         sea.rotate_x(-math.pi / 2)
         self.example.scene.add(sea)
@@ -114,8 +133,10 @@ class ObjectCreator:
 
 
         geometryball = ObjGeo('models/bola_praia.obj')
-        textureball = Texture(file_name="images/texture.png")
-        materialball = TextureMaterial(texture=textureball)
+        materialball = LambertMaterial(
+            texture_path = "images/texture.png"
+        )
+        # materialball = TextureMaterial(texture=Texture(file_name="images/texture.png"))
         self.meshball = Mesh(geometryball, materialball)
         self.ball = MovementRig()
         self.ball.add(self.meshball)
@@ -124,8 +145,9 @@ class ObjectCreator:
         self.example.scene.add(self.ball)
 
         jetSki_geometry = ObjGeo('models/jetSki.obj')
-        jetSki_texture = Texture(file_name="images/jetSki_azul.jpg")
-        jetSki_material = TextureMaterial(texture=jetSki_texture)
+        jetSki_material = LambertMaterial(
+            texture_path = "images/jetSki_azul.jpg"
+        )
         self.jetSki_mesh = Mesh(jetSki_geometry, jetSki_material)
         self.jetSki = MovementRig()
         self.jetSki.add(self.jetSki_mesh)
@@ -133,10 +155,10 @@ class ObjectCreator:
         self.jetSki.set_position(PLAYER_START_POSITION)  # Adjust position as needed
         self.example.scene.add(self.jetSki)   
 
-        opponent_geometry = ObjGeo('models/jetSki.obj')
-        opponent_texture = Texture(file_name="images/jetSki_red.jpg")
-        opponent_material = TextureMaterial(texture=opponent_texture)
-        self.opponent_mesh = Mesh(opponent_geometry, opponent_material)
+        opponent_material = LambertMaterial(
+            texture_path = "images/jetSki_red.jpg"
+        )
+        self.opponent_mesh = Mesh(jetSki_geometry, opponent_material)
         self.opponent = MovementRig()
         self.opponent.add(self.opponent_mesh)
         self.opponent.rotate_y((math.pi) / 2 )
@@ -144,17 +166,17 @@ class ObjectCreator:
         self.example.scene.add(self.opponent)   
 
         # Create and add the circle
-        circle_geometry = CircleGeometry(inner_radius=0.4, outer_radius=0.6, segments=64)
+        circle_geometry = EllipsoidGeometry(width=0.3, height=0.01, depth=0.3, radius_segments=16, height_segments=2)
         circle_material = self.white_material  # Use white color material
-        self.circle = Mesh(circle_geometry, circle_material)
-        self.example.scene.add(self.circle)
+        self.circle_ball = Mesh(circle_geometry, circle_material)
+        self.example.scene.add(self.circle_ball)
         
         # Ensure initial position is correct
         self.update_circle_position()
 
     def update_circle_position(self):
         ball_pos = self.ball.get_position()
-        self.circle.set_position([ball_pos[0], 0.1, ball_pos[2]])
+        self.circle_ball.set_position([ball_pos[0], 0.1, ball_pos[2]])
 
     def update_sine_wave_field(self):
         for field_element in self.field_elements:
@@ -268,7 +290,7 @@ class ObjectCreator:
         scale_factor = 20.0  # Fator de escala para "diminuir" a imagem e repetir a textura
 
         # Criando o material para as paredes com a textura repetida
-        wall_texture = Texture(file_name="images/field_wall0.png", property_dict={"wrap": GL.GL_REPEAT}, scale_factor=scale_factor)
+        wall_texture = Texture(file_name="images/field_wall0.png", property_dict={"wrap": GL.GL_REPEAT})
         wall_material = TextureMaterial(texture=wall_texture)
         wall_material.visible = True
 
@@ -312,7 +334,7 @@ class ObjectCreator:
         wall_thickness = 5
         scale_factor = 20.0
 
-        hitBoxes_texture = Texture(file_name="images/field_wall0.png", property_dict={"wrap": GL.GL_REPEAT}, scale_factor=scale_factor)
+        hitBoxes_texture = Texture(file_name="images/field_wall0.png", property_dict={"wrap": GL.GL_REPEAT})
         hitBoxes_material = TextureMaterial(texture=hitBoxes_texture)
         hitBoxes_material.visible = True
 
@@ -355,9 +377,9 @@ class ObjectCreator:
             x_position = -FIELD_WIDTH / 2 + i * spacing
             for z_position in [-FIELD_LENGTH / 2, FIELD_LENGTH / 2]:
                 random_color = [random.random(), random.random(), random.random()]
-                sphere_material = Material(self.vertex_shader_code, self.fragment_shader_code)
-                sphere_material.add_uniform("vec3", "baseColor", random_color)
-                sphere_material.locate_uniforms()
+                sphere_material = LambertMaterial(
+                    property_dict={"baseColor": random_color},
+                )
                 sphere_mesh = Mesh(sphere_geometry, sphere_material)
                 sphere_rig = MovementRig()
                 sphere_rig.add(sphere_mesh)
@@ -375,9 +397,9 @@ class ObjectCreator:
             z_position = -FIELD_LENGTH / 2 + i * spacing
             for x_position in [-FIELD_WIDTH / 2, FIELD_WIDTH / 2]:
                 random_color = [random.random(), random.random(), random.random()]
-                sphere_material = Material(self.vertex_shader_code, self.fragment_shader_code)
-                sphere_material.add_uniform("vec3", "baseColor", random_color)
-                sphere_material.locate_uniforms()
+                sphere_material = LambertMaterial(
+                    property_dict={"baseColor": random_color},
+                )
                 sphere_mesh = Mesh(sphere_geometry, sphere_material)
                 sphere_rig = MovementRig()
                 sphere_rig.add(sphere_mesh)

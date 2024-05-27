@@ -10,8 +10,8 @@ class Material:
         # Store Uniform objects, indexed by name of associated variable in shader.
         # Each shader typically contains these uniforms; values will be set during render process from Mesh / Camera.
         self._uniform_dict = {
-            "modelMatrix": Uniform("mat4", None),
-            "viewMatrix": Uniform("mat4", None),
+            "modelMatrix":      Uniform("mat4", None),
+            "viewMatrix":       Uniform("mat4", None),
             "projectionMatrix": Uniform("mat4", None),
         }
         # Store OpenGL render settings, indexed by variable name
@@ -48,14 +48,14 @@ class Material:
         Convenience method for setting multiple material "properties"
         (uniform and render setting values) from a dictionary
         """
-        for name, data in property_dict.items():
-            # Update uniforms
-            if name in self._uniform_dict.keys():
-                self._uniform_dict[name].data = data
-            # Update render settings
-            elif name in self._setting_dict.keys():
-                self._setting_dict[name] = data
-            # Unknown property type
-            else:
-                raise Exception("Material has no property named: " + name)
-
+        if property_dict:
+            for name, data in property_dict.items():
+                # Update uniforms
+                if name in self._uniform_dict.keys():
+                    self._uniform_dict[name].data = data
+                # Update render settings
+                elif name in self._setting_dict.keys():
+                    self._setting_dict[name] = data
+                # Unknown property type
+                else:
+                    raise Exception("Material has no property named: " + name)
